@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xwguan.autofund.dao.fund.FundDao">
+  <resultMap type="Fund" id="FundResult">
+    <id column="f_id" property="id" />
+    <result column="f_code" property="code" />
+    <result column="f_name" property="name" />
+    <result column="f_pinyin_name" property="pinyinName" />
+    <result column="f_abbr_pinyin_name" property="abbrPinyinName" />
+    <result column="f_type" property="type" />
+    <association property="fundInfo" resultMap="com.xwguan.autofund.dao.fund.FundInfoDao.FundInfoResult" />
+    <association property="assetAllocation" resultMap="com.xwguan.autofund.dao.fund.AssetAllocationDao.AssetAllocationResult" />
+    <collection property="fundHistoryList" resultMap="com.xwguan.autofund.dao.fund.FundHistoryDao.FundHistoryResult" />
+  </resultMap>
+
+  <select id="getCodeById" resultType="String">
+    SELECT code FROM fund WHERE id = #{id}
+  </select>
+  
+  <select id="getIdByCode" resultType="Integer">
+    SELECT id FROM fund WHERE code = #{code}
+  </select>
+
+  <!-- 这个状态的SQL可读性极差啊 -->
+  <select id="getFundById" resultMap="FundResult">
+    SELECT
+    <include refid="colDynamicInfoLatest" />
+    <include refid="from" />
+    <include refid="joinDynamicInfoLatest" />
+    WHERE f.id = #{id}
+  </select>
+
+  <select id="getFundByCode" resultMap="FundResult">
+    SELECT
+    <include refid="colDynamicInfoLatest" />
+    <include refid="from" />
+    <include refid="joinDynamicInfoLatest" />
+    WHERE f.code = #{code}
+  </select>
+
+  <select id="listAllFund" resultMap="FundResult">
+    SELECT
+    <include refid="colDynamicInfoHistory" />
+    <include refid="from" />
+    <include refid="joinDynamicInfoHistory" />
+    <include refid="orderDynamicCodeDate" />
+  </select>
+  
+  <select id="listAllFundCode" resultType="String">
+    SELECT code FROM fund ORDER BY code
+  </select>
+
+  <select id="listFundBySearchField" resultMap="FundResult">
+    SELECT
+    <include refid="colDynamicInfoLatest" />
+    <include refid="from" />
+    <include refid="joinDynamicInfoLatest" />
+    WHERE f.code LIKE #{searchField} '%' OR f.name LIKE #{searchField} '%' 
+      OR f.pinyin_name LIKE #{searchField} '%' OR f.abbr_pinyin_name LIKE #{searchField} '%'
+    <include refid="orderCode" />
+  </select>
+
+  <select id="listFundByType" resultMap="FundResult">
+    SELECT
+    <include refid="colDynamicInfoLatest" />
+    <include refid="from" />
+    <include refid="joinDynamicInfoLatest" />
+    WHERE f.type = #{type}
+    <include refid="orderCode" />
+  </select>
+
+  <select id="countFund" resultType="int">
+    SELECT count(*) FROM fund
+  </select>
+
+  <insert id="insertFund">
+    INSERT IGNORE INTO fund(<include refid="colSimple" />) VALUES
+    <foreach collection="list" item="item" separator=",">
+      (
+        #{item.code},
+        #{item.name},
+        #{item.pinyinName},
+        #{item.abbrPinyinName},
+        #{item.type}
+      )
+    </foreach>
+  </insert>
+
+  <insert id="insertAndGetId" useGeneratedKeys="true" keyProperty="id" parameterType="Fund">
+    INSERT IGNORE INTO fund(<include refid="colSimple" />) VALUES
+      (
+        #{code},
+        #{name},
+        #{pinyinName},
+        #{abbrPinyinName},
+        #{type}
+      )
+  </insert>
+
+  <update id="updateFund">
+    UPDATE fund SET
+      code = #{fund.code},
+      name = #{fund.name},
+      pinyin_name = #{fund.pinyinName},
+      abbr_pinyin_name = #{fund.abbrPinyinName},
+      type = #{fund.type}
+    WHERE id = #{fund.id}
+  </update>
+  
+  <delete id="deleteFundById">
+    DELETE FROM fund WHERE id = #{id}
+  </delete>
+
+  <delete id="deleteFundBatchById">
+    DELETE FROM fund WHERE id IN
+    <foreach collection="list" item="item" open="(" close=")" separator=",">
+      #{item}
+    </foreach>
+  </delete>
+  
+  <delete id="deleteFundByCode">
+    DELETE FROM fund WHERE code = #{code}
+  </delete>
+  
+  <!-- CUDBatchDao -->
+    
+  <insert id="insertAndSetIdBatch">
+    INSERT IGNORE INTO fund(<include refid="colSimple" />) VALUES
+    <foreach collection="list" item="item" separator=",">
+      (<include refid="valCUDBatch" />)
+    </foreach>
+  </insert>
+  
+  <update id="updateBatch">
+    REPLACE INTO fund (id, <include refid="colSimple" />) VALUES 
+    <foreach collection="list" item="item" separator=",">
+      (
+        #{item.id},
+        <include refid="valCUDBatch" />
+      )
+    </foreach>
+  </update>
+  
+  <update id="updateBatchByCode">
+    REPLACE INTO fund (id, <include refid="colSimple" />) VALUES 
+    <foreach collection="list" item="item" separator=",">
+      (
+        (SELECT fnd.id FROM fund fnd WHERE fnd.code = #{item.code}),
+        <include refid="valCUDBatch" />
+      )
+    </foreach>
+  </update>
+  
+  <delete id="deleteBatch">
+    DELETE FROM fund WHERE id IN
+    <foreach collection="list" item="item" open="(" close=")" separator=",">
+      #{item.id}
+    </foreach>
+  </delete>
+
+  <!-- COMMON SQLS -->
+
+  <!-- FROM AND JOIN -->
+
+  <sql id="from">
+    FROM fund f
+  </sql>
+
+  <sql id="joinFundInfo">
+    LEFT JOIN fund_info fi ON f.id = fi.fund_id
+  </sql>
+
+  <sql id="joinFundHistory">
+    LEFT JOIN fund_history fh ON f.id = fh.fund_id
+  </sql>
+  
+  <sql id="joinMaxDate">
+    LEFT JOIN (SELECT fund_id, max(date) max_date FROM fund_history GROUP BY fund_id) md
+    ON f.id = md.fund_id
+  </sql>
+
+  <sql id="joinDynamicInfoLatest">
+    <if test="includeFundInfo != null and includeFundInfo">
+      <include refid="joinFundInfo" />
+    </if>
+    <if test="includeLatestHistory != null and includeLatestHistory">
+      <include refid="joinFundHistory" />
+      <include refid="joinMaxDate" />
+    </if>
+  </sql>
+  
+  <sql id="joinDynamicInfoHistory">
+    <if test="includeFundInfo != null and includeFundInfo">
+      <include refid="joinFundInfo" />
+    </if>
+    <if test="includeHistory != null and includeHistory">
+      <include refid="joinFundHistory" />
+    </if>
+  </sql>
+
+  <!-- COLUMNS -->
+
+  <sql id="colSimple">
+    code, name, pinyin_name, abbr_pinyin_name, type
+  </sql>
+
+  <sql id="colFund">
+    f.id f_id,
+    f.code f_code,
+    f.name f_name,
+    f.pinyin_name f_pinyin_name,
+    f.abbr_pinyin_name f_abbr_pinyin_name,
+    f.type f_type
+  </sql>
+
+  <sql id="colFundInfo">
+    , <include refid="com.xwguan.autofund.dao.fund.FundInfoDao.colFundInfo" />
+  </sql>
+
+  <sql id="colFundHistory">
+    , <include refid="com.xwguan.autofund.dao.fund.FundHistoryDao.colFundHistory" />
+  </sql>
+
+  <sql id="colAssetAllocation">
+    , <include refid="com.xwguan.autofund.dao.fund.AssetAllocationDao.colAssetAllocation" />
+  </sql>
+
+  <sql id="colDynamicInfoLatest">
+    <include refid="colFund" />
+    <if test="includeFundInfo != null and includeFundInfo">
+      <include refid="colFundInfo" />
+    </if>
+    <if test="includeLatestHistory != null and includeLatestHistory">
+      <include refid="colFundHistory" />
+    </if>
+  </sql>
+
+  <sql id="colDynamicInfoHistory">
+    <include refid="colFund" />
+    <if test="includeFundInfo != null and includeFundInfo">
+      <include refid="colFundInfo" />
+    </if>
+    <if test="includeHistory != null and includeHistory">
+      <include refid="colFundHistory" />
+    </if>
+  </sql>
+  
+  <sql id="valCUDBatch">
+    #{item.code},
+    #{item.name},
+    #{item.pinyinName},
+    #{item.abbrPinyinName},
+    #{item.type}
+  </sql>
+  
+  <!-- ORDERS -->
+
+  <sql id="orderCode">
+    ORDER BY f.code ASC
+  </sql>
+
+  <sql id="orderDate">
+    ORDER BY fh.date DESC
+  </sql>
+
+  <sql id="orderDynamicCodeDate">
+    ORDER BY f.code ASC
+    <if test="includeHistory != null and includeHistory">
+      , fh.date DESC
+    </if>
+  </sql>
+
+</mapper>

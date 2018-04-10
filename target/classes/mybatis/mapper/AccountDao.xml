@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.xwguan.autofund.dao.account.AccountDao">
+  <resultMap type="Account" id="AccountResult">
+    <id column="a_id" property="id" />
+    <result column="a_owner_id" property="ownerId" />
+    <result column="a_owner_type" property="ownerType" />
+    <collection property="assetHistoryList" 
+      resultMap="com.xwguan.autofund.dao.account.AssetHistoryDao.AssetHistoryResult" />
+    <collection property="tradeDetailList" 
+      resultMap="com.xwguan.autofund.dao.account.TradeDetailDao.TradeDetailResult" />
+  </resultMap>
+
+  <select id="getById" resultMap="AccountResult">
+    SELECT
+    <include refid="colDynamic" />
+    <include refid="fromAlias" />
+    <include refid="joinDynamic" />
+    WHERE a.id = #{id}
+    <include refid="orderDateDynamic" />
+  </select>
+
+  <select id="getByOwnerIdAndType" resultMap="AccountResult">
+    SELECT
+    <include refid="colDynamic" />
+    <include refid="fromAlias" />
+    <include refid="joinDynamic" />
+    WHERE owner_id = #{ownerId} AND owner_type = #{ownerType}
+    <include refid="orderDateDynamic" />
+  </select>
+  
+  <select id="getByDateRange" resultMap="AccountResult">
+    SELECT
+    <include refid="colAccountWithHistory" />
+    <include refid="fromAlias" />
+    <include refid="joinFull" />
+    WHERE a.id = #{id} AND ah.date between #{fromDate} AND #{toDate}
+    <include refid="orderDate" />
+  </select>
+  
+  <select id="getIdByOwnerIdAndType" resultType="Long">
+    SELECT id <include refid="from" />
+    WHERE owner_id = #{ownerId} AND owner_type = #{ownerType}
+  </select>
+  
+  <delete id="deleteByOwnerIdAndType">
+    DELETE <include refid="from" /> 
+    WHERE owner_id = #{ownerId} AND owner_type = #{ownerType}
+  </delete>
+
+  <!-- BaseDao -->
+  
+  <select id="count" resultType="long">
+    <include refid="com.xwguan.autofund.dao.BaseDao.count" />
+  </select>
+  
+  <insert id="insertAndSetId" useGeneratedKeys="true" keyProperty="id" parameterType="Account">
+    <include refid="com.xwguan.autofund.dao.BaseDao.insertAndSetId" />
+  </insert>
+  
+  <update id="update" parameterType="Account">
+    <include refid="com.xwguan.autofund.dao.BaseDao.update" />
+  </update>
+
+  <delete id="deleteById">
+    <include refid="com.xwguan.autofund.dao.BaseDao.deleteById" />
+  </delete>
+
+  <!-- CDBatchDao -->
+
+  <insert id="insertAndSetIdBatch" useGeneratedKeys="true" keyProperty="id" parameterType="Account">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.insertAndSetIdBatch" />
+  </insert>
+  
+  <delete id="deleteByIdListBatch">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.deleteByIdListBatch" />
+  </delete>
+
+  <!-- COMMON SQLS -->
+
+  <!-- FROM AND JOIN -->
+
+  <sql id="from">
+    FROM <include refid="tblName" />
+  </sql>
+  
+  <sql id="fromAlias">
+   <include refid="from" /> <include refid="tblAlias" />
+  </sql>
+
+  <sql id="joinAssetHistory">
+    LEFT JOIN asset_history ah ON a.id = ah.account_id
+  </sql>
+  
+  <sql id="joinLatestAssetHistory">
+    LEFT JOIN asset_history ah 
+      ON a.id = ah.account_id 
+      AND ah.date = (SELECT max(date) FROM asset_history ahmd WHERE ahmd.account_id = a.id)
+  </sql>
+
+  <sql id="joinTradeDetail">
+    LEFT JOIN trade_detail td ON a.id = td.account_id
+  </sql>
+
+  <sql id="joinLatestTradeDetail">
+    LEFT JOIN trade_detail td 
+      ON a.id = td.account_id 
+      AND td.date = (SELECT max(date) FROM trade_detail tdmd WHERE tdmd.account_id = a.id)
+  </sql>
+  
+  <sql id="joinLatest">
+    <include refid="com.xwguan.autofund.dao.account.AccountDao.joinLatestAssetHistory" />
+    <include refid="com.xwguan.autofund.dao.account.AccountDao.joinLatestTradeDetail" />
+  </sql>
+  
+  <sql id="joinFull">
+    <include refid="com.xwguan.autofund.dao.account.AccountDao.joinAssetHistory" />
+    <include refid="com.xwguan.autofund.dao.account.AccountDao.joinTradeDetail" />
+      AND ah.date = td.date 
+      <!-- 不加日期相等这个条件结果是笛卡尔乘积, 是否有更好的join方式或者数据库中把两个表合并? -->
+  </sql>
+  
+  <sql id="joinDynamic">
+    <choose>
+      <when test="historyScope != null and historyScope.name() == 'LATEST'">
+        <include refid="com.xwguan.autofund.dao.account.AccountDao.joinLatest" />
+      </when>
+      <when test="historyScope != null and historyScope.name() == 'FULL'">
+        <include refid="com.xwguan.autofund.dao.account.AccountDao.joinFull" />
+      </when>
+    </choose>
+  </sql>
+  
+  <!-- TABLE -->
+
+  <sql id="tblName">
+    account
+  </sql>
+  
+  <sql id="tblAlias">
+    a
+  </sql>
+
+  <!-- COLUMNS AND FIELDS-->
+
+  <sql id="colExcludeId">
+    owner_id,
+    owner_type
+  </sql>
+
+  <sql id="colFull">
+    a.id a_id,
+    a.owner_id a_owner_id,
+    a.owner_type a_owner_type
+  </sql>
+  
+  <sql id="colAccountHistory">
+    <include refid="com.xwguan.autofund.dao.account.AssetHistoryDao.colFull" />,
+    <include refid="com.xwguan.autofund.dao.account.TradeDetailDao.colFull" />
+  </sql>
+  
+  <sql id="colAccountWithHistory">
+    <include refid="com.xwguan.autofund.dao.account.AccountDao.colFull" />,
+    <include refid="com.xwguan.autofund.dao.account.AccountDao.colAccountHistory" />
+  </sql>
+
+  <sql id="colDynamic">
+    <include refid="com.xwguan.autofund.dao.account.AccountDao.colFull" />
+    <if test="historyScope != null and historyScope.name() != 'NONE'">
+      , <include refid="com.xwguan.autofund.dao.account.AccountDao.colAccountHistory" />
+    </if>
+  </sql>
+
+  <sql id="valInsert">
+    #{ownerId},
+    #{ownerType}
+  </sql>
+  
+  <sql id="colAndValUpdate">
+    owner_id = #{ownerId},
+    owner_type = #{ownerType}
+  </sql>
+  
+  <sql id="valInsertBatchExcludeId">
+    #{item.ownerId},
+    #{item.ownerType}
+  </sql>
+
+  <!-- ORDERS -->
+
+  <sql id="orderDate">
+      ORDER BY ah.date DESC
+  </sql>
+  
+  <sql id="orderDateDynamic">
+    <if test="historyScope != null and historyScope.name() != 'NONE'">
+      <include refid="orderDate" />
+    </if>
+  </sql>
+  
+</mapper>

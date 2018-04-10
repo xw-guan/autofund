@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xwguan.autofund.dao.fund.FundHistoryDao">
+  <resultMap type="FundHistory" id="FundHistoryResult">
+    <id column="fh_id" property="id" />
+    <result column="fh_fund_id" property="fundId" />
+    <result column="fh_date" property="date" />
+    <result column="nav" property="nav" />
+    <result column="acc_nav" property="accNav" />
+    <result column="equity_return_pct" property="equityReturnPct" />
+    <result column="unit_money" property="unitMoney" />
+  </resultMap>
+
+  <select id="listAllFundHistory" resultMap="FundHistoryResult">
+    SELECT
+    <include refid="colFundHistory" />
+    <include refid="from" />
+    <include refid="orderFundId" />
+  </select>
+
+  <select id="listFundHistoryByFundId" resultMap="FundHistoryResult">
+    SELECT
+    <include refid="colFundHistory" />
+    <include refid="from" />
+    WHERE fund_id = #{fundId}
+    <include refid="orderDate" />
+  </select>
+
+  <select id="listFundHistoryByDateRange" resultMap="FundHistoryResult">
+    SELECT
+    <include refid="colFundHistory" />
+    <include refid="from" />
+    WHERE fund_id = #{fundId} AND date BETWEEN #{start} AND #{end}
+    <include refid="orderDate" />
+  </select>
+
+  <select id="listFundHistoryDaysBefore" resultMap="FundHistoryResult">
+    SELECT
+    <include refid="colFundHistory" />
+    <include refid="from" />
+    WHERE fund_id = #{fundId} AND date &lt;= #{date}
+    <include refid="orderDate" />
+    LIMIT #{days}
+  </select>
+
+  <select id="getLatestDate" resultType="java.time.LocalDate">
+    SELECT max(date) FROM fund_history WHERE fund_id = #{fundId}
+  </select>
+
+  <select id="getLatestFundHistory" resultMap="FundHistoryResult">
+    SELECT
+    <include refid="colFundHistory" />
+    FROM fund_history fh, (SELECT max(date) date FROM fund_history WHERE fund_id = #{fundId}) m
+    WHERE fund_id = #{fundId} AND fh.date = m.date
+  </select>
+  
+  <select id="getFundHistoryByFundIdAndDate" resultMap="FundHistoryResult">
+    SELECT
+    <include refid="colFundHistory" />
+    <include refid="from" />
+    WHERE fund_id = #{fundId} AND fh.date = #{date}
+  </select>
+
+  <select id="getFundHistoryDaysBefore" resultMap="FundHistoryResult">
+    SELECT
+    <include refid="colFundHistory" />
+    <include refid="from" />
+    WHERE fund_id = #{fundId} AND date &lt;= #{date}
+    <include refid="orderDate" />
+    LIMIT #{days}, 1
+  </select>
+
+  <insert id="insertFundHistory">
+    INSERT IGNORE INTO fund_history (<include refid="colSimple" />) VALUES
+    <foreach collection="list" item="item" separator=",">
+      (
+      #{item.fundId},
+      #{item.date},
+      #{item.nav},
+      #{item.accNav},
+      #{item.equityReturnPct},
+      #{item.unitMoney}
+      )
+    </foreach>
+  </insert>
+
+  <update id="updateFundHistory">
+    UPDATE fund_history SET
+      fund_id = #{fundHistory.fundId},
+      date = #{fundHistory.date},
+      nav = #{fundHistory.nav},
+      acc_nav = #{fundHistory.accNav},
+      equity_return_pct = #{fundHistory.equityReturnPct},
+      unit_money = #{fundHistory.unitMoney}
+    WHERE id = #{fundHistory.id}
+  </update>
+
+  <delete id="deleteFundHistoryByFundIdAndDate">
+    DELETE FROM fund_history
+    WHERE fund_id = #{fundId} AND date = #{date}
+  </delete>
+
+  <delete id="deleteFundHistoryByFundId">
+    DELETE FROM fund_history
+    WHERE fund_id = #{fundId}
+  </delete>
+
+  <delete id="deleteFundHistoryBatchByFundId">
+    DELETE FROM fund_history
+    WHERE fund_id IN
+    <foreach collection="list" item="item" open="(" close=")" separator=",">
+      #{item}
+    </foreach>
+  </delete>
+
+  <delete id="deleteAll">
+    DELETE FROM fund_history WHERE 1 = 1;
+  </delete>
+
+  <!-- COMMON SQLS -->
+
+  <!-- COLUMNS -->
+
+  <sql id="colSimple">
+    fund_id,
+    date,
+    nav,
+    acc_nav,
+    equity_return_pct,
+    unit_money
+  </sql>
+  
+  <sql id="colFundHistory">
+    fh.id fh_id,
+    fh.fund_id fh_fund_id,
+    fh.date fh_date,
+    fh.nav,
+    fh.acc_nav,
+    fh.equity_return_pct,
+    fh.unit_money
+  </sql>
+
+  <!-- FROM AND JOIN -->
+
+  <sql id="from">
+    FROM fund_history fh
+  </sql>
+
+  <!-- ORDERS -->
+
+  <sql id="orderFundId">
+    ORDER BY fund_id ASC
+  </sql>
+
+  <sql id="orderDate">
+    ORDER BY date DESC
+  </sql>
+
+</mapper>

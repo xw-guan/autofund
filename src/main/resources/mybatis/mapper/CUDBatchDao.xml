@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.xwguan.autofund.dao.CUDBatchDao">
+
+  <!-- CUDBatchDao -->
+
+  <sql id="insertAndSetIdBatch">
+    INSERT IGNORE INTO <include refid="tblName" /> (<include refid="colExcludeId" />) VALUES
+    <foreach collection="list" item="item" separator=",">
+      (<include refid="valInsertBatchExcludeId" />)
+    </foreach>
+  </sql>
+
+  <sql id="updateBatch">
+    UPDATE <include refid="tblName" />
+    <set>
+      <include refid="updateBatchSets" />    
+    </set>
+    WHERE id IN    
+    <foreach collection="list" item="item" open="(" close=")" separator=",">
+      #{item.id}
+    </foreach>
+  </sql>
+  
+  <sql id="updateOrInsertBatch">
+    INSERT INTO <include refid="tblName" /> (id, <include refid="colExcludeId" />) VALUES
+    <foreach collection="list" item="item" separator=",">
+      (#{item.id}, <include refid="valInsertBatchExcludeId" />)
+    </foreach>
+    ON DUPLICATE KEY UPDATE <include refid="colInsertOrUpdate" />
+  </sql>
+
+  <sql id="deleteByIdListBatch">
+    DELETE FROM <include refid="tblName" /> WHERE id IN
+    <foreach collection="list" item="item" open="(" close=")" separator=",">
+      #{item}
+    </foreach>
+  </sql>
+
+  <!-- COMMON SQLS -->
+
+  <!-- TABLE -->
+
+  <!-- 表名 -->
+  <sql id="tblName">
+  </sql>
+  
+  <!-- FROM AND JOIN -->
+
+  <!-- COLUMNS AND FIELDS-->
+  
+  <sql id="colExcludeId">
+  </sql>
+  
+  <sql id="updateBatchSets">
+  </sql>
+  
+  <!-- FORMAT LIKE table_id = VALUES(table_id) -->
+  <sql id="colInsertOrUpdate">
+  </sql>
+  
+  <!-- FORMAT LIKE #{item.tableId} -->
+  <sql id="valInsertBatchExcludeId">
+  </sql>
+
+  <!-- ORDERS -->
+
+</mapper>

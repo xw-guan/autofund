@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.xwguan.autofund.dao.account.AssetHistoryDao">
+  <resultMap type="AssetHistory" id="AssetHistoryResult">
+    <id column="ah_id" property="id" />
+    <result column="ah_account_id" property="accountId" />
+    <result column="ah_date" property="date" />
+    <result column="ah_pos_asset" property="posAsset" />
+    <result column="ah_pos_income" property="posIncome" />
+    <result column="ah_pos_income_rate_pct" property="posIncomeRatePct" />
+    <result column="ah_pos_cost" property="posCost" />
+    <result column="ah_pos_share" property="posShare" />
+    <result column="ah_pos_price" property="posPrice" />
+    <result column="ah_total_cost" property="totalCost" />
+    <result column="ah_total_income" property="totalIncome" />
+    <result column="ah_total_income_rate_pct" property="totalIncomeRatePct" />
+    <result column="ah_total_history_income" property="totalHistoryIncome" />
+  </resultMap>
+  
+  <select id="getLatestByAccountId" resultMap="AssetHistoryResult">
+    SELECT
+    <include refid="colFull" />
+    <include refid="fromAlias" />
+    WHERE account_id = #{accountId} 
+      AND date = (SELECT max(date) <include refid="from" /> WHERE account_id = #{accountId})
+  </select>
+
+  <select id="getByAccountIdAndDate" resultMap="AssetHistoryResult">
+    SELECT
+    <include refid="colFull" />
+    <include refid="fromAlias" />
+    WHERE account_id = #{accountId} AND date = #{date}
+  </select>
+  
+  <select id="listByAccountId" resultMap="AssetHistoryResult">
+    SELECT
+    <include refid="colFull" />
+    <include refid="fromAlias" />
+    WHERE account_id = #{accountId}
+    <include refid="orderDate" />
+  </select>
+  
+  <delete id="deleteByAccountId">
+    DELETE <include refid="from" /> WHERE account_id = #{accountId}
+  </delete>
+
+  <!-- BaseDao -->
+  
+  <select id="getById" resultMap="AssetHistoryResult">
+    <include refid="com.xwguan.autofund.dao.BaseDao.getById" />
+  </select>
+  
+  <select id="count" resultType="long">
+    <include refid="com.xwguan.autofund.dao.BaseDao.count" />
+  </select>
+
+  <insert id="insertAndSetId" useGeneratedKeys="true" keyProperty="id" parameterType="AssetHistory">
+    <include refid="com.xwguan.autofund.dao.BaseDao.insertAndSetId" />
+  </insert>
+  
+  <update id="update" parameterType="AssetHistory">
+    <include refid="com.xwguan.autofund.dao.BaseDao.update" />
+  </update>
+
+  <delete id="deleteById">
+    <include refid="com.xwguan.autofund.dao.BaseDao.deleteById" />
+  </delete>
+
+  <!-- CUDBatchDao -->
+    
+  <insert id="insertAndSetIdBatch" useGeneratedKeys="true" keyProperty="id" parameterType="AssetHistory">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.insertAndSetIdBatch" />
+  </insert>
+  
+  <update id="updateBatch">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.updateBatch" />
+  </update>
+  
+  <update id="updateOrInsertBatch">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.updateOrInsertBatch" />
+  </update>
+  
+  <delete id="deleteByIdListBatch">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.deleteByIdListBatch" />
+  </delete>
+
+  <!-- COMMON SQLS -->
+  
+  <!-- TABLE -->
+  
+  <sql id="tblName">
+    asset_history
+  </sql>
+
+  <sql id="tblAlias">
+    ah
+  </sql>
+
+  <!-- COLUMNS -->
+
+  <sql id="colExcludeId">
+    account_id,
+    date,
+    pos_asset,
+    pos_income,
+    pos_income_rate_pct,
+    pos_cost,
+    pos_share,
+    pos_price,
+    total_cost,
+    total_income,
+    total_income_rate_pct,
+    total_history_income
+  </sql>
+  
+  <sql id="colFull">
+    ah.id ah_id,
+    ah.account_id ah_account_id,
+    ah.date ah_date,
+    ah.pos_asset ah_pos_asset,
+    ah.pos_income ah_pos_income,
+    ah.pos_income_rate_pct ah_pos_income_rate_pct,
+    ah.pos_cost ah_pos_cost,
+    ah.pos_share ah_pos_share,
+    ah.pos_price ah_pos_price,
+    ah.total_cost ah_total_cost,
+    ah.total_income ah_total_income,
+    ah.total_income_rate_pct ah_total_income_rate_pct,
+    ah.total_history_income ah_total_history_income
+  </sql>
+  
+  <sql id="valInsert">
+    #{accountId},
+    #{date},
+    #{posAsset},
+    #{posIncome},
+    #{posIncomeRatePct},
+    #{posCost},
+    #{posShare},
+    #{posPrice},
+    #{totalCost},
+    #{totalIncome},
+    #{totalIncomeRatePct},
+    #{totalHistoryIncome} 
+  </sql>
+  
+  <sql id="colAndValUpdate">
+    pos_asset = #{posAsset},
+    pos_income = #{posIncome},
+    pos_income_rate_pct = #{posIncomeRatePct},
+    pos_cost = #{posCost},
+    pos_share = #{posShare},
+    pos_price = #{posPrice},
+    total_cost = #{totalCost},
+    total_income = #{totalIncome},
+    total_income_rate_pct = #{totalIncomeRatePct},
+    total_history_income = #{totalHistoryIncome}
+  </sql>
+  
+  <!-- CUDBatch -->
+  
+  <sql id="updateBatchSets">
+    pos_asset =
+      <foreach collection="list" item="item" open="CASE id" close="END,">
+        WHEN #{item.id} THEN #{item.posAsset}
+      </foreach>
+    pos_income =
+      <foreach collection="list" item="item" open="CASE id" close="END,">
+        WHEN #{item.id} THEN #{item.posIncome}
+      </foreach>
+    pos_income_rate_pct =
+      <foreach collection="list" item="item" open="CASE id" close="END,">
+        WHEN #{item.id} THEN #{item.posIncomeRatePct}
+      </foreach>
+    pos_cost =
+      <foreach collection="list" item="item" open="CASE id" close="END,">
+        WHEN #{item.id} THEN #{item.posCost}
+      </foreach>
+    pos_share =
+      <foreach collection="list" item="item" open="CASE id" close="END,">
+        WHEN #{item.id} THEN #{item.posShare}
+      </foreach>
+    pos_price =
+      <foreach collection="list" item="item" open="CASE id" close="END,">
+        WHEN #{item.id} THEN #{item.posPrice}
+      </foreach>
+    total_cost =
+      <foreach collection="list" item="item" open="CASE id" close="END,">
+        WHEN #{item.id} THEN #{item.totalCost}
+      </foreach>
+    total_income =
+      <foreach collection="list" item="item" open="CASE id" close="END,">
+        WHEN #{item.id} THEN #{item.totalIncome}
+      </foreach>
+    total_income_rate_pct =
+      <foreach collection="list" item="item" open="CASE id" close="END,">
+        WHEN #{item.id} THEN #{item.totalIncomeRatePct}
+      </foreach>
+    total_history_income =
+      <foreach collection="list" item="item" open="CASE id" close="END,">
+        WHEN #{item.id} THEN #{item.totalHistoryIncome}
+      </foreach>
+  </sql>
+  
+  <sql id="colInsertOrUpdate">
+    pos_asset = VALUES(pos_asset),
+    pos_income = VALUES(pos_income),
+    pos_income_rate_pct = VALUES(pos_income_rate_pct),
+    pos_cost = VALUES(pos_cost),
+    pos_share = VALUES(pos_share),
+    pos_price = VALUES(pos_price),
+    total_cost = VALUES(total_cost),
+    total_income = VALUES(total_income),
+    total_income_rate_pct = VALUES(total_income_rate_pct),
+    total_history_income = VALUES(total_history_income)
+  </sql>
+  
+  <sql id="valInsertBatchExcludeId">
+    #{item.accountId},
+    #{item.date},
+    #{item.posAsset},
+    #{item.posIncome},
+    #{item.posIncomeRatePct},
+    #{item.posCost},
+    #{item.posShare},
+    #{item.posPrice},
+    #{item.totalCost},
+    #{item.totalIncome},
+    #{item.totalIncomeRatePct},
+    #{item.totalHistoryIncome} 
+  </sql>
+
+  <!-- FROM AND JOIN -->
+
+  <sql id="from">
+    FROM <include refid="tblName" />
+  </sql>
+  
+  <sql id="fromAlias">
+    <include refid="from" /> <include refid="tblAlias" />
+  </sql>
+  
+  <!-- ORDERS -->
+
+  <sql id="orderDate">
+    ORDER BY date DESC
+  </sql>
+
+</mapper>

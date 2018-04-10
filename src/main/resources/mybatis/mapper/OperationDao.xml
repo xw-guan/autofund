@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.xwguan.autofund.dao.plan.rule.OperationDao">
+  <resultMap type="Operation" id="OperationResult">
+    <id column="op_id" property="id" />
+    <result column="op_rule_id" property="ruleId" />
+    <result column="trade_value" property="tradeValue" />
+    <result column="trade_unit" property="tradeUnit" />
+  </resultMap>
+  
+  <select id="getByRuleId" resultMap="OperationResult">
+    SELECT
+    <include refid="colFull" />
+    <include refid="fromAlias" />
+    WHERE rule_id = #{ruleId}
+  </select>
+  
+  <delete id="deleteByRuleId">
+    DELETE <include refid="from" /> WHERE rule_id = #{ruleId}
+  </delete>
+
+  <!-- BaseDao -->
+  
+  <select id="count" resultType="long">
+    <include refid="com.xwguan.autofund.dao.BaseDao.count" />
+  </select>
+  
+  <select id="getById" resultMap="OperationResult">
+    <include refid="com.xwguan.autofund.dao.BaseDao.getById" />
+  </select>
+
+  <insert id="insertAndSetId" useGeneratedKeys="true" keyProperty="id" parameterType="Operation">
+    <include refid="com.xwguan.autofund.dao.BaseDao.insertAndSetId" />
+  </insert>
+  
+  <update id="update" parameterType="Operation">
+    <include refid="com.xwguan.autofund.dao.BaseDao.update" />
+  </update>
+
+  <delete id="deleteById">
+    <include refid="com.xwguan.autofund.dao.BaseDao.deleteById" />
+  </delete>
+
+  <!-- CUDBatchDao -->
+    
+  <insert id="insertAndSetIdBatch" useGeneratedKeys="true" keyProperty="id" parameterType="Operation">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.insertAndSetIdBatch" />
+  </insert>
+  
+  <update id="updateBatch">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.updateBatch" />
+  </update>
+  
+  <update id="updateOrInsertBatch">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.updateOrInsertBatch" />
+  </update>
+  
+  <delete id="deleteByIdListBatch">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.deleteByIdListBatch" />
+  </delete>
+
+  <!-- COMMON SQLS -->
+  
+  <!-- TABLE -->
+  
+  <sql id="tblName">
+    operation
+  </sql>
+  
+  <sql id="tblAlias">
+    op
+  </sql>
+
+  <!-- COLUMNS -->
+
+  <sql id="colExcludeId">
+    rule_id,
+    trade_value,
+    trade_unit
+  </sql>
+  
+  <sql id="colFull">
+    op.id op_id,
+    op.rule_id op_rule_id,
+    op.trade_value,
+    op.trade_unit
+  </sql>
+  
+  <sql id="valInsert">
+    #{ruleId},
+    #{tradeValue},
+    #{tradeUnit}
+  </sql>
+  
+  <sql id="colAndValUpdate">
+    trade_value = #{tradeValue},
+    trade_unit = #{tradeUnit}
+  </sql>
+  
+  <!-- CUDBatch -->
+
+  <sql id="updateBatchSets">
+    trade_value =
+      <foreach collection="list" item="item" open="CASE id" close="END,">
+        WHEN #{item.id} THEN #{item.tradeValue}
+      </foreach>
+    trade_unit =
+      <foreach collection="list" item="item" open="CASE id" close="END,">
+        WHEN #{item.id} THEN #{item.tradeUnit}
+      </foreach>
+  </sql>
+  
+  <sql id="colInsertOrUpdate">
+    trade_value = VALUES(trade_value),
+    trade_unit = VALUES(trade_unit)
+  </sql>  
+  
+  <sql id="valInsertBatchExcludeId">
+    #{item.ruleId},
+    #{item.tradeValue},
+    #{item.tradeUnit}
+  </sql>
+
+  <!-- FROM AND JOIN -->
+
+  <sql id="from">
+    FROM <include refid="tblName" />
+  </sql>
+  
+  <sql id="fromAlias">
+   <include refid="from" /> <include refid="tblAlias" />
+  </sql>
+
+  <!-- ORDERS -->
+
+</mapper>

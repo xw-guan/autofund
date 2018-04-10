@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xwguan.autofund.dao.fund.FundManagerDao">
+  <resultMap type="FundManager" id="FundManagerResult">
+    <id column="id" property="id" />
+    <result column="code" property="code" />
+    <result column="name" property="name" />
+    <result column="company_code" property="companyCode" />
+    <result column="current_fund_codes" property="currentFundCodes" />
+    <result column="current_fund_names" property="currentFundNames" />
+    <result column="career_days" property="careerDays" />
+    <result column="current_total_asset" property="currentTotalAsset" />
+  </resultMap>
+
+  <select id="getFundManagerById" resultMap="FundManagerResult">
+    SELECT
+    <include refid="colFundManager" />
+    <include refid="from" />
+    WHERE id = #{id}
+  </select>
+
+  <select id="getFundManagerByCode" resultMap="FundManagerResult">
+    SELECT
+    <include refid="colFundManager" />
+    <include refid="from" />
+    WHERE code = #{code}
+  </select>
+  
+  <select id="listAllFundManager" resultMap="FundManagerResult">
+    SELECT
+    <include refid="colFundManager" />
+    <include refid="from" />
+    <include refid="orderCode" />
+  </select>
+
+  <select id="listFundManagerBySearchField" resultMap="FundManagerResult">
+    SELECT
+    <include refid="colFundManager" />
+    <include refid="from" />
+    WHERE instr(code, #{searchField}) > 0 OR instr(name, #{searchField}) > 0 
+    <include refid="orderCode" />
+  </select>
+  
+  <select id="listFundManagerByCompanyCode" resultMap="FundManagerResult">
+    SELECT
+    <include refid="colFundManager" />
+    <include refid="from" />
+    WHERE company_code = #{companyCode}
+    <include refid="orderCode" />
+  </select>
+  
+  <select id="countFundManager" resultType="int">
+    SELECT count(*) FROM fund_manager
+  </select>
+
+  <insert id="insertFundManager">
+    INSERT IGNORE INTO fund_manager(<include refid="colSimple" />) VALUES
+    <foreach collection="list" item="item" separator=",">
+      (#{item.code}, #{item.name}, #{item.companyCode}, #{item.companyName}, #{item.currentFundCodes}, #{item.currentFundNames}, #{item.careerDays}, #{item.currentTotalAsset})
+    </foreach>
+  </insert>
+
+  <insert id="insertAndGetId" useGeneratedKeys="true" keyProperty="id" parameterType="FundManager">
+    INSERT IGNORE INTO fund_manager(<include refid="colSimple" />) VALUES
+      (#{code},#{name},#{companyCode}#{companyName}, #{currentFundCodes}, #{currentFundNames}, #{careerDays}, #{currentTotalAsset})
+  </insert>
+  
+  <update id="updateFundManager">
+    UPDATE fund_manager SET
+      code = #{fundManager.code},
+      name = #{fundManager.name},
+      company_code = #{fundManager.companyCode}, 
+      company_name = #{fundManager.companyName}, 
+      current_fund_codes = #{fundManager.currentFundCodes}, 
+      current_fund_names = #{fundManager.currentFundNames}, 
+      career_days = #{fundManager.careerDays}, 
+      current_total_asset = #{fundManager.currentTotalAsset}
+    WHERE id = #{fundManager.id}
+  </update>
+
+  <delete id="deleteFundManagerById">
+    DELETE FROM fund_manager WHERE id = #{id}
+  </delete>
+
+  <delete id="deleteFundManagerBatchById">
+    DELETE FROM fund_manager WHERE id IN
+    <foreach collection="list" item="item" open="(" close=")" separator=",">
+      #{item}
+    </foreach>
+  </delete>
+
+  <!-- CUDBatchDao -->
+    
+  <insert id="insertAndSetIdBatch">
+    INSERT IGNORE INTO fund_manager( <include refid="colSimple" /> ) VALUES
+    <foreach collection="list" item="item" separator=",">
+      ( <include refid="valCUDBatch" /> )
+    </foreach>
+  </insert>
+  
+  <update id="updateBatch">
+    REPLACE INTO fund_manager (id, <include refid="colSimple" />) VALUES 
+    <foreach collection="list" item="item" separator=",">
+      ( #{item.id}, <include refid="valCUDBatch" />)
+    </foreach>
+  </update>
+  
+  <update id="updateBatchByCode">
+    REPLACE INTO fund_manager (id, <include refid="colSimple" />) VALUES 
+    <foreach collection="list" item="item" separator=",">
+      ( (SELECT fm.id FROM fund_manager fm WHERE fm.code = #{item.code}), <include refid="valCUDBatch" /> )
+    </foreach>
+  </update>
+  
+  <delete id="deleteBatch">
+    DELETE FROM fund_manager WHERE id IN
+    <foreach collection="list" item="item" open="(" close=")" separator=",">
+      #{item.id}
+    </foreach>
+  </delete>
+
+  <!-- COMMON SQLS -->
+
+  <!-- FROM AND JOIN -->
+  
+  <sql id="from">
+    FROM fund_manager fm
+  </sql>
+
+  <!-- ORDERS -->
+  
+  <sql id="orderCode">
+    ORDER BY fm.code ASC
+  </sql>
+
+  <!-- COLUMNS -->
+
+  <sql id="colSimple">
+    code, name, company_code, company_name, current_fund_codes, current_fund_names, career_days, current_total_asset
+  </sql>
+
+  <sql id="colFundManager">
+    fm.id, fm.code, fm.name, fm.company_code, fm.company_name, fm.current_fund_codes, fm.current_fund_names, fm.career_days, fm.current_total_asset
+  </sql>
+  
+  <sql id="valCUDBatch">
+    #{item.code}, 
+    #{item.name},
+    #{item.companyCode},
+    #{item.companyName},
+    #{item.currentFundCodes},
+    #{item.currentFundNames},
+    #{item.careerDays},
+    #{item.currentTotalAsset}
+  </sql>
+
+</mapper>

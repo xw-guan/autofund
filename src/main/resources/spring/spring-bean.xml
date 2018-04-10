@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+  xmlns:tx="http://www.springframework.org/schema/tx"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
+
+  <!-- spring thread pool executor -->
+  <bean id="taskExecutor"
+    class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+    <!-- 线程池维护线程的最少数量 -->
+    <property name="corePoolSize" value="5" />
+    <!-- 允许的空闲时间 -->
+    <property name="keepAliveSeconds" value="200" />
+    <!-- 线程池维护线程的最大数量 -->
+    <property name="maxPoolSize" value="10" />
+    <!-- 缓存队列 -->
+    <property name="queueCapacity" value="20" />
+    <!-- 对拒绝task的处理策略 -->
+    <property name="rejectedExecutionHandler">
+      <bean class="java.util.concurrent.ThreadPoolExecutor$CallerRunsPolicy" />
+    </property>
+  </bean>
+  
+  <bean id="jsonMapper" class="com.xwguan.autofund.util.Jdk8JacksonMapper" factory-method="getMapper">
+  </bean>
+</beans>

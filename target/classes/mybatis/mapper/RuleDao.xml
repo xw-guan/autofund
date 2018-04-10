@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+ <!-- TODO suppressCondition unimplement-->
+
+<mapper namespace="com.xwguan.autofund.dao.plan.rule.RuleDao">
+  <resultMap type="Rule" id="RuleResult">
+    <id column="r_id" property="id" />
+    <result column="r_tactic_id" property="tacticId" />
+    <result column="r_tactic_type" property="tacticType" />
+    <association property="rangeCondition" resultMap="com.xwguan.autofund.dao.plan.rule.RangeConditionDao.RangeConditionResult"/>
+    <association property="operation" resultMap="com.xwguan.autofund.dao.plan.rule.OperationDao.OperationResult"/>
+  </resultMap>
+  
+  <select id="listIdByTacticIdAndType" resultType="Long">
+    SELECT id <include refid="from" />
+    WHERE tactic_id = #{tacticId} and tactic_type = #{tacticType}
+  </select>
+  
+  <select id="listByTacticIdAndType" resultMap="RuleResult">
+    SELECT
+    <include refid="colConditionOperation" />
+    <include refid="fromAlias" />
+    <include refid="joinConditionOperation" />
+    WHERE tactic_id = #{tacticId} and tactic_type = #{tacticType}
+  </select>
+  
+  <delete id="deleteByTacticIdAndType">
+    DELETE <include refid="from" /> 
+    WHERE tactic_id = #{tacticId} and tactic_type = #{tacticType}
+  </delete>
+
+  <!-- BaseDao -->
+  
+  <select id="getById" resultMap="RuleResult">
+    SELECT
+    <include refid="colConditionOperation" />
+    <include refid="fromAlias" />
+    <include refid="joinConditionOperation" />
+    WHERE r.id = #{id}
+  </select>
+
+  <select id="count" resultType="long">
+    <include refid="com.xwguan.autofund.dao.BaseDao.count" />
+  </select>
+  
+  <insert id="insertAndSetId" useGeneratedKeys="true" keyProperty="id" parameterType="Rule">
+    <include refid="com.xwguan.autofund.dao.BaseDao.insertAndSetId" />
+  </insert>
+  
+  <update id="update" parameterType="Rule">
+    <include refid="com.xwguan.autofund.dao.BaseDao.update" />
+  </update>
+
+  <delete id="deleteById">
+    <include refid="com.xwguan.autofund.dao.BaseDao.deleteById" />
+  </delete>
+
+  <!-- CDBatchDao -->
+    
+  <insert id="insertAndSetIdBatch" useGeneratedKeys="true" keyProperty="id" parameterType="Rule">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.insertAndSetIdBatch" />
+  </insert>
+  
+  <delete id="deleteByIdListBatch">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.deleteByIdListBatch" />
+  </delete>
+
+  <!-- COMMON SQLS -->
+  
+  <!-- TABLE -->
+  
+  <sql id="tblName">
+    rule
+  </sql>
+  
+  <sql id="tblAlias">
+    r
+  </sql>
+
+  <!-- COLUMNS -->
+
+  <sql id="colExcludeId">
+    tactic_id,
+    tactic_type
+  </sql>
+  
+  <sql id="colFull">
+    r.id r_id,
+    r.tactic_id r_tactic_id,
+    r.tactic_type r_tactic_type
+  </sql>
+  
+  <sql id="colConditionOperation">
+    <include refid="com.xwguan.autofund.dao.plan.rule.RuleDao.colFull" />,
+    <include refid="com.xwguan.autofund.dao.plan.rule.RangeConditionDao.colFull" />,
+    <include refid="com.xwguan.autofund.dao.plan.rule.OperationDao.colFull" />
+  </sql>
+  
+  <sql id="valInsert">
+    #{tacticId},
+    #{tacticType}
+  </sql>
+  
+  <sql id="colAndValUpdate">
+    tactic_id = #{tacticId},
+    tactic_type = #{tacticType}
+  </sql>
+    
+  <sql id="valInsertBatchExcludeId">
+    #{item.tacticId},
+    #{item.tacticType}
+  </sql>
+
+  <!-- FROM AND JOIN -->
+
+  <sql id="from">
+    FROM <include refid="tblName" />
+  </sql>
+  
+  <sql id="fromAlias">
+    <include refid="from" /> <include refid="tblAlias" />
+  </sql>
+  
+  <sql id="joinConditionOperation">
+    LEFT JOIN range_condition rc ON r.id = rc.rule_id
+    LEFT JOIN operation op ON r.id = op.rule_id
+  </sql>
+
+  <!-- ORDERS -->
+
+</mapper>

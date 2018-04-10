@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xwguan.autofund.dao.stock.MADao">
+  <resultMap type="MA" id="MAResult">
+    <id column="ma_id" property="id"/>
+    <result column="ma_stock_id" property="stockId"/>
+    <result column="ma_date" property="date"/>
+    <result column="ma5" property="ma5"/>
+    <result column="ma10" property="ma10"/>
+    <result column="ma20" property="ma20"/>
+    <result column="ma30" property="ma30"/>
+    <result column="ma60" property="ma60"/>
+    <result column="ma120" property="ma120"/>
+    <result column="ma250" property="ma250"/>
+  </resultMap>
+  
+  <select id="listAllMA" resultMap="MAResult">
+    SELECT <include refid="colMA"/>
+    FROM ma
+    INNER JOIN stock s ON ma.stock_id = s.id
+    ORDER BY s.symbol ASC, ma.date DESC
+  </select>
+  
+  <select id="listMAByStockId" resultMap="MAResult">
+    SELECT <include refid="colMA"/>
+    FROM ma
+    WHERE stock_id = #{stockId}
+    ORDER BY date DESC
+  </select>
+  
+  <select id="listMAByDateRange" resultMap="MAResult">
+    SELECT <include refid="colMA"/>
+    FROM ma
+    WHERE stock_id = #{stockId}
+      AND date BETWEEN #{start} AND #{end}
+    ORDER BY date DESC
+  </select>
+  
+  <select id="listNDayMAByDateRange" resultMap="MAResult">
+    SELECT <include refid="colNDayMA" />
+    FROM ma
+    WHERE stock_id = #{stockId}
+      AND date BETWEEN #{start} AND #{end}
+    ORDER BY date DESC
+  </select>
+  
+  <select id="getLatestMA" resultMap="MAResult">
+    SELECT <include refid="colNDayMA"/>
+    FROM ma, (SELECT max(date) max_date FROM ma WHERE stock_id = #{stockId}) m
+    WHERE stock_id = #{stockId} AND ma.date = max_date
+  </select>
+  
+  <select id="getMAByStockIdAndDate" resultMap="MAResult">
+    SELECT <include refid="colNDayMA"/>
+    FROM ma
+    WHERE stock_id = #{stockId} AND ma.date = #{date}
+  </select>
+  
+  <select id="getLatestDate" resultType="java.time.LocalDate">
+    SELECT max(date) FROM ma WHERE stock_id = #{stockId}
+  </select>
+  
+  <insert id="insertMA">
+    INSERT IGNORE INTO ma (<include refid="colSimple"/>) VALUES
+    <foreach collection="list" item="item" separator=",">
+      (  
+        #{item.stockId},
+        #{item.date},
+        #{item.ma5},
+        #{item.ma10},
+        #{item.ma20},
+        #{item.ma30},
+        #{item.ma60},
+        #{item.ma120},
+        #{item.ma250}
+      )
+    </foreach>
+  </insert>
+  
+  <update id="updateMA">
+    <!-- todo -->
+  </update>
+  
+  <delete id="deleteMAByStockIdAndDate">
+    DELETE FROM ma 
+    WHERE stock_id = #{stockId} AND date = {date}
+  </delete>
+  
+  <delete id="deleteMAByStockId">
+    DELETE FROM ma 
+    WHERE stock_id = #{stockId}
+  </delete>
+  
+  <delete id="deleteMABatchByStockId">
+    DELETE FROM ma 
+    WHERE stock_id IN
+    <foreach collection="list" item="item" open="(" close=")" separator=",">
+      #{item}
+    </foreach>
+  </delete>
+  
+  <delete id="deleteAll">
+    DELETE FROM ma WHERE 1 = 1;
+  </delete>
+  
+  <!-- COLUMNS -->
+  
+  <sql id="colSimple">
+    stock_id,
+    date,
+    ma5,
+    ma10,
+    ma20,
+    ma30,
+    ma60,
+    ma120,
+    ma250
+  </sql>
+  
+  <sql id="colMA">
+    ma.id ma_id,
+    ma.stock_id ma_stock_id,
+    ma.date ma_date,
+    ma.ma5,
+    ma.ma10,
+    ma.ma20,
+    ma.ma30,
+    ma.ma60,
+    ma.ma120,
+    ma.ma250
+  </sql>
+  
+  <sql id="colNDayMA">
+    id ma_id, stock_id ma_stock_id, date ma_date,
+    <choose>
+      <when test="nDayMA.toString() == 'MA5'.toString()">
+        ma5
+      </when>
+      <when test="nDayMA.toString() == 'MA10'.toString()">
+        ma10
+      </when>
+      <when test="nDayMA.toString() == 'MA20'.toString()">
+        ma20
+      </when>
+      <when test="nDayMA.toString() == 'MA30'.toString()">
+        ma30
+      </when>
+      <when test="nDayMA.toString() == 'MA60'.toString()">
+        ma60
+      </when>
+      <when test="nDayMA.toString() == 'MA120'.toString()">
+        ma120
+      </when>
+      <when test="nDayMA.toString() == 'MA250'.toString()">
+        ma250
+      </when>
+      <otherwise>
+        ma5, ma10, ma20, ma30, ma60, ma120, ma250
+      </otherwise>
+    </choose>
+  </sql>
+  
+  
+</mapper>
+<!-- Author: XWGuan, Version: 1.0.1 -->

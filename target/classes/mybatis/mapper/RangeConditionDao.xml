@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.xwguan.autofund.dao.plan.rule.RangeConditionDao">
+  <resultMap type="RangeCondition" id="RangeConditionResult">
+    <id column="rc_id" property="id" />
+    <result column="rc_rule_id" property="ruleId" />
+    <result column="boundary_left" property="boundaryLeft" />
+    <result column="boundary_right" property="boundaryRight" />
+    <result column="range_unit" property="rangeUnit" />
+  </resultMap>
+  
+  <select id="getByRuleId" resultMap="RangeConditionResult">
+    SELECT
+    <include refid="colFull" />
+    <include refid="fromAlias" />
+    WHERE rule_id = #{ruleId}
+  </select>
+  
+  <delete id="deleteByRuleId">
+    DELETE <include refid="from" /> WHERE rule_id = #{ruleId}
+  </delete>
+
+ <!-- BaseDao -->
+  
+  <select id="getById" resultMap="RangeConditionResult">
+    <include refid="com.xwguan.autofund.dao.BaseDao.getById" />
+  </select>
+
+  <select id="count" resultType="long">
+    <include refid="com.xwguan.autofund.dao.BaseDao.count" />
+  </select>
+  
+  <insert id="insertAndSetId" useGeneratedKeys="true" keyProperty="id" parameterType="RangeCondition">
+    <include refid="com.xwguan.autofund.dao.BaseDao.insertAndSetId" />
+  </insert>
+  
+  <update id="update" parameterType="RangeCondition">
+    <include refid="com.xwguan.autofund.dao.BaseDao.update" />
+  </update>
+
+  <delete id="deleteById">
+    <include refid="com.xwguan.autofund.dao.BaseDao.deleteById" />
+  </delete>
+
+  <!-- CUDBatchDao -->
+    
+  <insert id="insertAndSetIdBatch" useGeneratedKeys="true" keyProperty="id" parameterType="RangeCondition">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.insertAndSetIdBatch" />
+  </insert>
+  
+  <update id="updateBatch">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.updateBatch" />
+  </update>
+  
+  <update id="updateOrInsertBatch">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.updateOrInsertBatch" />
+  </update>
+  
+  <delete id="deleteByIdListBatch">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.deleteByIdListBatch" />
+  </delete>
+
+  <!-- COMMON SQLS -->
+  
+  <!-- TABLE -->
+  
+  <sql id="tblName">
+    range_condition
+  </sql>
+  
+  <sql id="tblAlias">
+    rc
+  </sql>
+
+  <!-- COLUMNS -->
+
+  <sql id="colExcludeId">
+    rule_id,
+    boundary_left,
+    boundary_right,
+    range_unit
+  </sql>
+  
+  <sql id="colFull">
+    rc.id rc_id,
+    rc.rule_id rc_rule_id,
+    rc.boundary_left,
+    rc.boundary_right,
+    rc.range_unit
+  </sql>
+  
+  <sql id="valInsert">
+    #{ruleId},
+    #{boundaryLeft},
+    #{boundaryRight},
+    #{rangeUnit}
+  </sql>
+  
+  <sql id="colAndValUpdate">
+    boundary_left = #{boundaryLeft},
+    boundary_right = #{boundaryRight},
+    range_unit = #{rangeUnit}
+  </sql>
+    
+  <!-- CUDBatch -->
+
+  <sql id="updateBatchSets">
+    boundary_left =
+      <foreach collection="list" item="item" open="CASE id" close="END,">
+        WHEN #{item.id} THEN #{item.boundaryLeft}
+      </foreach>
+    boundary_right =
+      <foreach collection="list" item="item" open="CASE id" close="END,">
+        WHEN #{item.id} THEN #{item.boundaryRight}
+      </foreach>
+    range_unit =
+      <foreach collection="list" item="item" open="CASE id" close="END,">
+        WHEN #{item.id} THEN #{item.rangeUnit}
+      </foreach>
+  </sql>
+  
+  <sql id="colInsertOrUpdate">
+    boundary_left = VALUES(boundary_left),
+    boundary_right = VALUES(boundary_right),
+    range_unit = VALUES(range_unit)
+  </sql>  
+  
+  <sql id="valInsertBatchExcludeId">
+    #{item.ruleId},
+    #{item.boundaryLeft},
+    #{item.boundaryRight},
+    #{item.rangeUnit}
+  </sql>
+
+  <!-- FROM AND JOIN -->
+
+  <sql id="from">
+    FROM <include refid="tblName" />
+  </sql>
+  
+  <sql id="fromAlias">
+   <include refid="from" /> <include refid="tblAlias" />
+  </sql>
+
+  <!-- ORDERS -->
+
+</mapper>

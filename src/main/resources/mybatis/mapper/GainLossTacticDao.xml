@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+ <!-- TODO suppressCondition unimplement-->
+
+<mapper namespace="com.xwguan.autofund.dao.plan.tactic.GainLossTacticDao">
+  <resultMap type="GainLossTactic" id="GainLossTacticResult">
+    <id column="glt_id" property="id" />
+    <result column="glt_plan_id" property="planId" />
+    <result column="glt_activated" property="activated" />
+    <association property="periodCondition" resultMap="com.xwguan.autofund.dao.plan.rule.PeriodConditionDao.PeriodConditionResult"/>
+    <collection property="ruleList" resultMap="com.xwguan.autofund.dao.plan.rule.RuleDao.RuleResult"/>
+  </resultMap>
+  
+  <select id="getById" resultMap="GainLossTacticResult">
+    <include refid="com.xwguan.autofund.dao.plan.tactic.TacticDao.getById" />
+  </select>
+  
+  <select id="getByPlanId" resultMap="GainLossTacticResult">
+    <include refid="com.xwguan.autofund.dao.plan.tactic.TacticDao.getByPlanId" />
+  </select>
+  
+  <select id="getIdByPlanId" resultType="Long">
+    <include refid="com.xwguan.autofund.dao.plan.tactic.TacticDao.getIdByPlanId" />
+  </select>
+  
+  <delete id="deleteByPlanId">
+    <include refid="com.xwguan.autofund.dao.plan.tactic.TacticDao.deleteByPlanId" />
+  </delete>
+  
+  <delete id="setActivated">
+    <include refid="com.xwguan.autofund.dao.plan.tactic.TacticDao.setActivated" />
+  </delete>
+  
+  <!-- BaseDao -->
+  
+  <select id="count" resultType="long">
+    <include refid="com.xwguan.autofund.dao.BaseDao.count" />
+  </select>
+  
+  <insert id="insertAndSetId" useGeneratedKeys="true" keyProperty="id" parameterType="TradeDetail">
+    <include refid="com.xwguan.autofund.dao.BaseDao.insertAndSetId" />
+  </insert>
+  
+  <update id="update" parameterType="TradeDetail">
+    <include refid="com.xwguan.autofund.dao.BaseDao.update" />
+  </update>
+
+  <delete id="deleteById">
+    <include refid="com.xwguan.autofund.dao.BaseDao.deleteById" />
+  </delete>
+
+  <!-- COMMON SQLS -->
+  
+  <!-- TABLE -->
+  
+  <sql id="tblName">
+    gain_loss_tactic
+  </sql>
+  
+  <sql id="tblAlias">
+    glt
+  </sql>
+
+  <!-- COLUMNS -->
+
+  <sql id="colExcludeId">
+    plan_id,
+    activated
+  </sql>
+  
+  <sql id="colFull">
+    glt.id glt_id,
+    glt.plan_id glt_plan_id,
+    glt.activated glt_acticated
+  </sql>
+  
+  <sql id="valInsert">
+    #{planId},
+    #{activated}
+  </sql>
+  
+  <sql id="colAndValUpdate">
+    activated = #{activated}
+  </sql>
+
+  <!-- FROM AND JOIN -->
+
+  <sql id="from">
+    FROM <include refid="tblName" />
+  </sql>
+  
+  <sql id="fromAlias">
+    <include refid="from" /> <include refid="tblAlias" />
+  </sql>
+  
+  <sql id="joinConditionOperation">
+    <include refid="com.xwguan.autofund.dao.plan.tactic.TacticDao.joinConditionOperation" />
+  </sql>
+
+  <!-- ORDERS -->
+
+</mapper>

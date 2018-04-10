@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.xwguan.autofund.dao.plan.PositionDao">
+  <resultMap type="Position" id="PositionResult">
+    <id column="id" property="id" />
+    <result column="plan_id" property="planId" />
+    <result column="fund_id" property="fundId" />
+    <result column="ref_index_id" property="refIndexId" />
+    <association property="account" resultMap="com.xwguan.autofund.dao.account.AccountDao.AccountResult"/>
+  </resultMap>
+  
+  <select id="getById" resultMap="PositionResult">
+    SELECT
+    <include refid="colDynamic" />
+    <include refid="fromAlias" />
+    <include refid="joinDynamic" />
+    WHERE pst.id = #{id}
+  </select>
+  
+  <select id="listByPlanId" resultMap="PositionResult">
+    SELECT
+    <include refid="colDynamic" />
+    <include refid="fromAlias" />
+    <include refid="joinDynamic" />
+    WHERE pst.plan_id = #{planId}
+  </select>
+  
+  <select id="listIdByPlanId" resultType="Long">
+    SELECT pst.id
+    <include refid="fromAlias" />
+    WHERE pst.plan_id = #{planId}
+  </select>
+  
+  <delete id="deleteByPlanId">
+    DELETE <include refid="from" /> WHERE plan_id = #{planId}
+  </delete>
+  
+  <update id="updateRefIndexId">
+    UPDATE <include refid="tblName" />
+    SET ref_index_id = #{refIndexId}
+    WHERE id = #{id}
+  </update>
+
+  <!-- BaseDao -->
+
+  <select id="count" resultType="long">
+    <include refid="com.xwguan.autofund.dao.BaseDao.count" />
+  </select>
+  
+  <insert id="insertAndSetId" useGeneratedKeys="true" keyProperty="id" parameterType="Position">
+    <include refid="com.xwguan.autofund.dao.BaseDao.insertAndSetId" />
+  </insert>
+  
+  <update id="update" parameterType="AssetHistory">
+    <include refid="com.xwguan.autofund.dao.BaseDao.update" />
+  </update>
+
+  <delete id="deleteById">
+    <include refid="com.xwguan.autofund.dao.BaseDao.deleteById" />
+  </delete>
+
+  <!-- CUDBatchDao -->
+    
+  <insert id="insertAndSetIdBatch" useGeneratedKeys="true" keyProperty="id" parameterType="Position">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.insertAndSetIdBatch" />
+  </insert>
+  
+  <update id="updateBatch">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.updateBatch" />
+  </update>
+  
+  <update id="updateOrInsertBatch">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.updateOrInsertBatch" />
+  </update>
+  
+  <delete id="deleteByIdListBatch">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.deleteByIdListBatch" />
+  </delete>
+
+  <!-- COMMON SQLS -->
+  
+  <!-- TABLE -->
+  
+  <sql id="tblName">
+    position
+  </sql>
+  
+  <sql id="tblAlias">
+    pst
+  </sql>
+
+  <!-- COLUMNS -->
+
+  <sql id="colExcludeId">
+    plan_id,
+    fund_id,
+    ref_index_id
+  </sql>
+  
+  <sql id="colFull">
+    pst.id,
+    pst.plan_id,
+    pst.fund_id,
+    pst.ref_index_id
+  </sql>
+  
+  <sql id="colDynamic">
+    <include refid="com.xwguan.autofund.dao.plan.PositionDao.colFull" />
+    <if test="includeLatestAccountHistory != null and includeLatestAccountHistory">
+      , <include refid="com.xwguan.autofund.dao.account.AccountDao.colAccountWithHistory" />
+    </if>
+  </sql>
+  
+  <sql id="valInsert">
+    #{planId},
+    #{fundId},
+    #{refIndexId}
+  </sql>
+  
+  <sql id="colAndValUpdate">
+    ref_index_id = #{refIndexId}
+  </sql>
+  
+  <!-- CUDBatch -->
+  
+  <sql id="updateBatchSets">
+    ref_index_id =
+      <foreach collection="list" item="item" open="CASE id" close="END,">
+        WHEN #{item.id} THEN #{item.refIndexId}
+      </foreach>
+  </sql>
+  
+  <sql id="colInsertOrUpdate">
+    ref_index_id = VALUES(ref_index_id)
+  </sql>
+  
+  <sql id="valInsertBatchExcludeId">
+    #{item.planId},
+    #{item.fundId},
+    #{item.refIndexId}
+  </sql>   
+
+  <!-- FROM AND JOIN -->
+
+  <sql id="from">
+    FROM <include refid="tblName" />
+  </sql>
+  
+  <sql id="fromAlias">
+    <include refid="from" /> <include refid="tblAlias" />
+  </sql>
+  
+  <sql id="joinAccount">
+    LEFT JOIN account a ON a.owner_id = pst.id AND a.owner_type = 'POSITION'
+  </sql>
+  
+  <sql id="joinDynamic">
+    <if test="includeLatestAccountHistory != null and includeLatestAccountHistory">
+          <include refid="com.xwguan.autofund.dao.plan.PositionDao.joinAccount" />
+    <include refid="com.xwguan.autofund.dao.account.AccountDao.joinLatest" />
+    </if>
+  </sql>
+
+  <!-- ORDERS -->
+
+</mapper>

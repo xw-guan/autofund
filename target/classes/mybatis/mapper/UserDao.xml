@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xwguan.autofund.dao.user.UserDao">
+  <resultMap type="User" id="UserResult">
+    <id column="u_id" property="id" />
+    <result column="u_name" property="name" />
+    <result column="u_password" property="password" />
+    <result column="u_phone_number" property="phoneNumber" />
+    <result column="u_email" property="email" />
+    <result column="u_user_type" property="userType" />
+<!--     <association property="userInfo" resultMap="com.xwguan.autofund.dao.user.userInfoDao.UserInfoResult" /> -->
+    <association property="account" resultMap="com.xwguan.autofund.dao.account.AccountDao.AccountResult" />
+    <collection property="planList" resultMap="com.xwguan.autofund.dao.plan.PlanDao.PlanResult" />
+  </resultMap>
+</mapper>

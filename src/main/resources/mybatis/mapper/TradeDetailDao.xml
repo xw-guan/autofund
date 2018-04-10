@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.xwguan.autofund.dao.account.TradeDetailDao">
+  <resultMap type="TradeDetail" id="TradeDetailResult">
+    <id column="td_id" property="id" />
+    <result column="td_account_id" property="accountId" />
+    <result column="td_date" property="date" />
+    <result column="td_trade_yuan" property="tradeYuan" />
+    <result column="td_trade_share" property="tradeShare" />
+    <result column="td_buy_sum" property="buySum" />
+    <result column="td_sell_sum" property="sellSum" />
+    <result column="td_trade_state" property="tradeState" />
+  </resultMap>
+
+  <select id="getLatestByAccountId" resultMap="TradeDetailResult">
+    SELECT
+    <include refid="colFull" />
+    <include refid="fromAlias" />
+    WHERE account_id = #{accountId} 
+      AND date = (SELECT max(date) <include refid="from" /> WHERE account_id = #{accountId})
+  </select>
+
+  <select id="getByAccountIdAndDate" resultMap="TradeDetailResult">
+    SELECT
+    <include refid="colFull" />
+    <include refid="fromAlias" />
+    WHERE account_id = #{accountId} AND date = #{date}
+  </select>
+  
+  <select id="getPrevTradeDetailByAccountIdAndDate" resultMap="TradeDetailResult">
+    SELECT
+    <include refid="colFull" />
+    <include refid="fromAlias" />
+    WHERE account_id = #{accountId} AND date &lt; #{date}
+    <include refid="orderDate" />
+    LIMIT 1
+  </select>
+  
+  <select id="listByAccountId" resultMap="TradeDetailResult">
+    SELECT
+    <include refid="colFull" />
+    <include refid="fromAlias" />
+    WHERE account_id = #{accountId}
+    <include refid="orderDate" />
+  </select>
+  
+  <delete id="deleteByAccountId">
+    DELETE <include refid="from" /> WHERE account_id = #{accountId}
+  </delete>
+  
+  <update id="updateTradeState">
+    UPDATE <include refid="tblName" /> SET trade_state = #{tradeState} WHERE id = #{id}
+  </update>
+
+  <!-- BaseDao -->
+  
+  <select id="getById" resultMap="TradeDetailResult">
+    <include refid="com.xwguan.autofund.dao.BaseDao.getById" />
+  </select>
+
+  <select id="count" resultType="long">
+    <include refid="com.xwguan.autofund.dao.BaseDao.count" />
+  </select>
+  
+  <insert id="insertAndSetId" useGeneratedKeys="true" keyProperty="id" parameterType="TradeDetail">
+    <include refid="com.xwguan.autofund.dao.BaseDao.insertAndSetId" />
+  </insert>
+  
+  <update id="update" parameterType="TradeDetail">
+    <include refid="com.xwguan.autofund.dao.BaseDao.update" />
+  </update>
+
+  <delete id="deleteById">
+    <include refid="com.xwguan.autofund.dao.BaseDao.deleteById" />
+  </delete>
+
+  <!-- CUDBatchDao -->
+    
+  <insert id="insertAndSetIdBatch" useGeneratedKeys="true" keyProperty="id" parameterType="TradeDetail">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.insertAndSetIdBatch" />
+  </insert>
+  
+  <update id="updateBatch">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.updateBatch" />
+  </update>
+  
+  <update id="updateOrInsertBatch">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.updateOrInsertBatch" />
+  </update>
+  
+  <delete id="deleteByIdListBatch">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.deleteByIdListBatch" />
+  </delete>
+
+  <!-- COMMON SQLS -->
+  
+  <!-- TABLE -->
+  
+  <sql id="tblName">
+    trade_detail
+  </sql>
+  
+  <sql id="tblAlias">
+    td
+  </sql>
+  
+  <!-- COLUMNS AND VALUES -->
+
+  <sql id="colExcludeId">
+    account_id,
+    date,
+    trade_yuan,
+    trade_share,
+    buy_sum,
+    sell_sum,
+    trade_state
+  </sql>
+  
+  <sql id="colFull">
+    td.id td_id,
+    td.account_id td_account_id,
+    td.date td_date,
+    td.trade_yuan td_trade_yuan,
+    td.trade_share td_trade_share,
+    td.buy_sum td_buy_sum,
+    td.sell_sum td_sell_sum,
+    td.trade_state td_trade_state
+  </sql>
+  
+  <sql id="valInsert">
+    #{accountId},
+    #{date},
+    #{tradeYuan},
+    #{tradeShare},
+    #{buySum},
+    #{sellSum},
+    #{tradeState}
+  </sql>
+  
+  <sql id="colAndValUpdate">
+    trade_yuan = #{tradeYuan},
+    trade_share = #{tradeShare},
+    buy_sum = #{buySum},
+    sell_sum = #{sellSum},
+    trade_state = #{tradeState}
+  </sql>
+
+  <!-- CUDBatch -->
+
+  <sql id="updateBatchSets">
+    trade_yuan =
+      <foreach collection="list" item="item" open="CASE id" close="END,">
+        WHEN #{item.id} THEN #{item.tradeYuan}
+      </foreach>
+    trade_share =
+      <foreach collection="list" item="item" open="CASE id" close="END,">
+        WHEN #{item.id} THEN #{item.tradeShare}
+      </foreach>
+    buy_sum =
+      <foreach collection="list" item="item" open="CASE id" close="END,">
+        WHEN #{item.id} THEN #{item.buySum}
+      </foreach>
+    sell_sum =
+      <foreach collection="list" item="item" open="CASE id" close="END,">
+        WHEN #{item.id} THEN #{item.sellSum}
+      </foreach>
+    trade_state =
+      <foreach collection="list" item="item" open="CASE id" close="END,">
+        WHEN #{item.id} THEN #{item.tradeState}
+      </foreach>
+  </sql>
+  
+  <sql id="colInsertOrUpdate">
+    trade_yuan = VALUES(trade_yuan),
+    trade_share = VALUES(trade_share),
+    buy_sum = VALUES(buy_sum),
+    sell_sum = VALUES(sell_sum),
+    trade_state = VALUES(trade_state)
+  </sql>
+
+  <sql id="valInsertBatchExcludeId">
+    #{item.accountId},
+    #{item.date},
+    #{item.tradeYuan},
+    #{item.tradeShare},
+    #{item.buySum},
+    #{item.sellSum},
+    #{item.tradeState}
+  </sql>
+
+  <!-- FROM AND JOIN -->
+
+  <sql id="from">
+    FROM <include refid="tblName" />
+  </sql>
+  
+  <sql id="fromAlias">
+    <include refid="from" /> <include refid="tblAlias" />
+  </sql>
+
+  <!-- ORDERS -->
+
+  <sql id="orderDate">
+    ORDER BY date DESC
+  </sql>
+
+</mapper>

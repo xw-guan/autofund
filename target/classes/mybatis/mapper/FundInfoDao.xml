@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xwguan.autofund.dao.fund.FundInfoDao">
+  <resultMap type="FundInfo" id="FundInfoResult">
+    <id column="fi_id" property="id" />
+    <result column="fi_fund_id" property="fundId" />
+    <result column="fi_date" property="date" />
+    <result column="manager_code" property="managerCode" />
+    <result column="manager_work_time" property="managerWorkTime" />
+    <result column="company_code" property="companyCode" />
+  </resultMap>
+
+  <select id="getFundInfoById" resultMap="FundInfoResult">
+    SELECT
+    <include refid="colFundInfo" />
+    <include refid="from" />
+    WHERE fi.id = #{id}
+  </select>
+
+  <select id="getFundInfoByFundId" resultMap="FundInfoResult">
+    SELECT
+    <include refid="colFundInfo" />
+    <include refid="from" />
+    WHERE fi.fund_id = #{fundId}
+  </select>
+  
+  <select id="listAllFundInfo" resultMap="FundInfoResult">
+    SELECT
+    <include refid="colFundInfo" />
+    <include refid="from" />
+    <include refid="orderFundId" />
+  </select>
+
+  <insert id="insertFundInfo">
+    INSERT IGNORE INTO fund_info (
+    <include refid="colSimple" />
+    ) VALUES
+    <foreach collection="list" item="item" separator=",">
+      (
+      #{item.fundId},
+      #{item.date},
+      #{item.managerCode},
+      #{item.managerWorkTime},
+      #{item.companyCode}
+      )
+    </foreach>
+  </insert>
+
+  <update id="updateFundInfo">
+    UPDATE fund_info SET
+      fund_id = #{fundInfo.fundId},
+      date = #{fundInfo.date},
+      manager_code = #{fundInfo.managerCode},
+      manager_work_time = #{fundInfo.managerWorkTime},
+      company_code = #{fundInfo.companyCode}
+    WHERE id = #{fundInfo.id}
+  </update>
+
+  <delete id="deleteFundInfoById">
+    DELETE FROM fund_info WHERE id = #{id}
+  </delete>
+
+  <delete id="deleteFundInfoByFundId">
+    DELETE FROM fund_info WHERE fund_id = #{fundId}
+  </delete>
+
+  <delete id="deleteFundInfoBatchByFundId">
+    DELETE FROM fund_info
+    WHERE fund_id IN
+    <foreach collection="list" item="item" open="(" close=")" separator=",">
+      #{item}
+    </foreach>
+  </delete>
+
+  <delete id="deleteAll">
+    DELETE FROM fund_info WHERE 1 = 1;
+  </delete>
+
+
+  <!-- COMMON SQLS -->
+
+  <!-- FROM AND JOIN -->
+
+  <sql id="from">
+    FROM fund_info fi
+  </sql>
+
+  <!-- COLUMNS -->
+  <sql id="colSimple">
+    fund_id,
+    date,
+    manager_code,
+    manager_work_time,
+    company_code
+  </sql>
+
+  <sql id="colFundInfo">
+    fi.id fi_id,
+    fi.fund_id fi_fund_id,
+    fi.date fi_date,
+    fi.manager_code,
+    fi.manager_work_time,
+    fi.company_code
+  </sql>
+  
+  <!-- ORDERS -->
+
+  <sql id="orderFundId">
+    ORDER BY fi_fund_id ASC
+  </sql>
+  
+</mapper>

@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.xwguan.autofund.dao.plan.PlanHistoryDao">
+  <resultMap type="PlanHistory" id="PlanHistoryResult">
+    <id column="ph_id" property="id" />
+    <result column="ph_plan_id" property="planId" />
+    <result column="start_date" property="startDate" />
+    <result column="history_date" property="historyDate" />
+    <result column="plan_state" property="planState" />
+    <result column="plan_period_income" property="planPeriodIncome" />
+    <result column="plan_total_income" property="planTotalIncome" />
+  </resultMap>
+  
+  <select id="getLatestByPlanId" resultMap="PlanHistoryResult">
+    SELECT
+    <include refid="colFull" />
+    <include refid="fromAlias" />, 
+      (SELECT max(start_date) start_date <include refid="from" /> WHERE plan_id = #{planId}) max
+    WHERE plan_id = #{planId} 
+      AND ph.start_date = max.startDate
+  </select>
+
+  <select id="getByPlanIdAndDate" resultMap="PlanHistoryResult">
+    SELECT
+    <include refid="colFull" />
+    <include refid="fromAlias" />
+    WHERE plan_id = #{planId} AND start_date = #{startDate}
+  </select>
+  
+  <select id="listByPlanId" resultMap="PlanHistoryResult">
+    SELECT
+    <include refid="colFull" />
+    <include refid="fromAlias" />
+    WHERE plan_id = #{planId}
+    <include refid="orderDate" />
+  </select>
+  
+  <delete id="deleteByPlanId">
+    DELETE <include refid="from" /> WHERE plan_id = #{planId}
+  </delete>
+
+  <!-- BaseDao -->
+  
+  <select id="getById" resultMap="PlanHistoryResult">
+    SELECT
+    <include refid="colFull" />
+    <include refid="fromAlias" />
+    WHERE id = #{id}
+  </select>
+
+  <insert id="insertAndSetId" useGeneratedKeys="true" keyProperty="id" parameterType="PlanHistory">
+    INSERT IGNORE INTO <include refid="tblName" /> (<include refid="colSimple" />) 
+    VALUES (<include refid="valInsert" />)
+  </insert>
+
+  <update id="update" parameterType="PlanHistory">
+    UPDATE <include refid="tblName" /> SET
+      <include refid="colAndValUpstartDate" />
+    WHERE id = #{id}
+  </update>
+
+  <delete id="deleteById">
+    DELETE <include refid="from" /> WHERE id = #{id}
+  </delete>
+
+  <!-- CUDBatchDao -->
+    
+  <select id="count" resultType="long">
+    <include refid="com.xwguan.autofund.dao.BaseDao.count" />
+  </select>
+  
+  <insert id="insertAndSetIdBatch" useGeneratedKeys="true" keyProperty="id" parameterType="PlanHistory">
+    INSERT IGNORE INTO <include refid="tblName" /> (<include refid="colSimple" />) VALUES
+    <foreach collection="list" item="item" separator=",">
+      (<include refid="valCUDBatch" />)
+    </foreach>
+  </insert>
+  
+  <update id="updateBatch">
+    REPLACE INTO <include refid="tblName" /> (id, <include refid="colSimple" />) VALUES 
+    <foreach collection="list" item="item" separator=",">
+      (#{item.id}, <include refid="valCUDBatch" />)
+    </foreach>
+  </update>
+  
+  <delete id="deleteBatch">
+    DELETE FROM <include refid="tblName" /> WHERE id IN
+    <foreach collection="list" item="item" open="(" close=")" separator=",">
+      #{item.id}
+    </foreach>
+  </delete>
+
+  <!-- COMMON SQLS -->
+  
+  <!-- TABLE -->
+  
+  <sql id="tblName">
+    plan_history
+  </sql>
+  
+  <sql id="tblAlias">
+    ph
+  </sql>
+
+  <!-- COLUMNS -->
+
+  <sql id="colSimple">
+    plan_id,
+    start_date,
+    history_date,
+    plan_state,
+    plan_period_income,
+    plan_total_income
+  </sql>
+  
+  <sql id="colFull">
+    ph.id ph_id,
+    ph.plan_id ph_plan_id,
+    ph.start_date start_date,
+    ph.history_date,
+    ph.plan_state,
+    ph.plan_period_income,
+    ph.plan_total_income
+  </sql>
+  
+  <sql id="valInsert">
+    #{planId},
+    #{startDate},
+    #{historyDate},
+    #{planState},
+    #{planPeriodIncome},
+    #{planTotalIncome}
+  </sql>
+  
+  <sql id="colAndValUpstartDate">
+    plan_id = #{planId},
+    start_date = #{startDate},
+    history_date = #{historyDate},
+    plan_state = #{planState},
+    plan_period_income = #{planPeriodIncome},
+    plan_total_income = #{planTotalIncome}
+  </sql>
+
+  <sql id="valCUDBatch">
+    #{item.planId},
+    #{item.startDate},
+    #{item.historyDate},
+    #{item.planState},
+    #{item.planPeriodIncome},
+    #{item.planTotalIncome}
+  </sql>
+
+  <!-- FROM AND JOIN -->
+
+  <sql id="from">
+    FROM <include refid="tblName" />
+  </sql>
+  
+  <sql id="fromAlias">
+   <include refid="from" /> <include refid="tblAlias" />
+  </sql>
+
+  <!-- ORDERS -->
+
+  <sql id="orderDate">
+    ORDER BY start_date DESC
+  </sql>
+
+</mapper>

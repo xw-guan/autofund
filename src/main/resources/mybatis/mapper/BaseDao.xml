@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.xwguan.autofund.dao.BaseDao">
+
+  <sql id="getById">
+    SELECT
+    <include refid="colFull" />
+    <include refid="fromAlias" />
+    WHERE id = #{id}
+  </sql>
+  
+  <sql id="count">
+    SELECT count(*) FROM <include refid="tblName" />
+  </sql>
+
+  <sql id="insertAndSetId">
+    INSERT IGNORE INTO <include refid="tblName" /> (<include refid="colExcludeId" />)
+    VALUES (<include refid="valInsert" />)
+  </sql>
+  
+<!--   <sql id="insertOrUpdate"> -->
+<!--     INSERT INTO <include refid="tblName" /> (<include refid="colExcludeId" />) -->
+<!--     VALUES (<include refid="valInsert" />) -->
+<!--     ON DUPLICATE KEY UPDATE <include refid="colInsertOrUpdate" /> -->
+<!--   </sql> -->
+
+  <sql id="update">
+    UPDATE <include refid="tblName" />
+    SET <include refid="colAndValUpdate" />
+    WHERE id = #{id}
+  </sql>
+
+  <sql id="deleteById">
+    DELETE <include refid="from" /> WHERE id = #{id}
+  </sql>
+
+  <!-- COMMON SQLS -->
+
+  <!-- TABLE -->
+
+  <sql id="tblName">
+  </sql>
+  
+  <sql id="tblAlias">
+  </sql>
+  
+  <!-- FROM AND JOIN -->
+
+  <sql id="from">
+    FROM <include refid="tblName" />
+  </sql>
+  
+  <sql id="fromAlias">
+    <include refid="from" /> <include refid="tblAlias" />
+  </sql>
+
+  <!-- COLUMNS AND FIELDS-->
+
+  <!-- FIELDS EXCLUDE ID -->
+  <sql id="colExcludeId">
+  </sql>
+
+  <!-- ALL FIELDS PROBABLY INCLUDE ALIAS-->
+  <sql id="colFull">
+  </sql>
+  
+  <!-- FORMAT LIKE #{tableId} -->
+  <sql id="valInsert">
+  </sql>
+  
+  <!-- FORMAT LIKE table_id = VALUES(table_id) -->
+<!--   <sql id="colInsertOrUpdate"> -->
+<!--   </sql> -->
+  
+  <!-- FORMAT LIKE table_id = #{tableId} -->
+  <sql id="colAndValUpdate">
+  </sql>
+  
+  <!-- ORDERS -->
+
+</mapper>

@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xwguan.autofund.dao.stock.StockDao">
+  <resultMap type="Stock" id="StockResult">
+    <id column="s_id" property="id" />
+    <result column="s_symbol" property="symbol" />
+    <result column="s_name" property="name" />
+    <result column="s_is_index" property="index" />
+    <collection property="stockDataList" resultMap="com.xwguan.autofund.dao.stock.StockDataDao.StockDataResult" />
+    <collection property="maList" resultMap="com.xwguan.autofund.dao.stock.MADao.MAResult" />
+  </resultMap>
+
+  <select id="getSymbolById" resultType="String">
+    SELECT symbol FROM stock WHERE id = #{id}
+  </select>
+  
+  <select id="getIdBySymbol" resultType="Integer">
+    SELECT id FROM stock WHERE symbol = #{symbol}
+  </select>
+
+  <select id="getById" resultMap="StockResult">
+    SELECT
+    <include refid="colDynamic" />
+    <include refid="fromAlias" />
+    <include refid="joinDynamic" />
+    WHERE s.id = #{id}
+    <include refid="orderDateDynamic" />
+  </select>
+
+  <select id="getBySymbol" resultMap="StockResult">
+    SELECT
+    <include refid="colDynamic" />
+    <include refid="fromAlias" />
+    <include refid="joinDynamic" />
+    WHERE s.symbol = #{symbol}
+    <include refid="orderDateDynamic" />
+  </select>
+  
+  <select id="listAll" resultMap="StockResult">
+    SELECT
+    <include refid="colDynamicIncludeLatest" />
+    <include refid="fromAlias" />
+    <include refid="joinDynamicIncludeLatest" />
+    <include refid="orderSymbol" />
+  </select>
+  
+  <select id="listAllFull" resultMap="StockResult">
+    SELECT
+    <include refid="colFull" />,
+    <include refid="colStockData" />
+    <include refid="fromAlias" />
+    <include refid="joinStockData" />
+    <include refid="orderSymbolDate" />
+  </select>
+
+  <select id="listBySymbol" resultMap="StockResult">
+    SELECT
+    <include refid="colDynamicIncludeLatest" />
+    <include refid="fromAlias" />
+    <include refid="joinDynamicIncludeLatest" />
+    WHERE s.symbol LIKE #{symbol} '%'
+    <include refid="orderSymbol" />
+  </select>
+
+  <select id="listByName" resultMap="StockResult">
+    SELECT
+    <include refid="colDynamicIncludeLatest" />
+    <include refid="fromAlias" />
+    <include refid="joinDynamicIncludeLatest" />
+    WHERE instr(s.name, #{name}) > 0
+    <include refid="orderSymbol" />
+  </select>
+
+  <select id="listBySymbolOrName" resultMap="StockResult">
+    SELECT
+    <include refid="colDynamicIncludeLatest" />
+    <include refid="fromAlias" />
+    <include refid="joinDynamicIncludeLatest" />
+    WHERE s.symbol LIKE #{symbolOrName} '%' OR instr(s.name, #{symbolOrName}) > 0
+    <include refid="orderSymbol" />
+  </select>
+  
+  <select id="listIndex" resultMap="StockResult">
+    SELECT
+    <include refid="colDynamicIncludeLatest" />
+    <include refid="fromAlias" />
+    <include refid="joinDynamicIncludeLatest" />
+    WHERE s.is_index = true
+    <include refid="orderSymbol" />
+  </select>
+
+  <delete id="deleteStockBySymbol">
+    DELETE FROM stock WHERE symbol = #{symbol}
+  </delete>
+  
+  <!-- BaseDao -->
+  
+  <select id="count" resultType="long">
+    <include refid="com.xwguan.autofund.dao.BaseDao.count" />
+  </select>
+  
+  <insert id="insertAndSetId" useGeneratedKeys="true" keyProperty="id" parameterType="Stock">
+    <include refid="com.xwguan.autofund.dao.BaseDao.insertAndSetId" />
+  </insert>
+  
+  <update id="update" parameterType="Stock">
+    <include refid="com.xwguan.autofund.dao.BaseDao.update" />
+  </update>
+
+  <delete id="deleteById">
+    <include refid="com.xwguan.autofund.dao.BaseDao.deleteById" />
+  </delete>
+  
+  <!-- CUDBatchDao -->
+    
+  <insert id="insertAndSetIdBatch" useGeneratedKeys="true" keyProperty="id" parameterType="PeriodCondition">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.insertAndSetIdBatch" />
+  </insert>
+  
+  <update id="updateBatch">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.updateBatch" />
+  </update>
+  
+  <update id="updateOrInsertBatch">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.updateOrInsertBatch" />
+  </update>
+  
+  <delete id="deleteByIdListBatch">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.deleteByIdListBatch" />
+  </delete>
+
+  <!-- COMMON SQLS -->
+
+  <!-- FROM AND JOIN -->
+
+  <sql id="from">
+    FROM <include refid="tblName" />
+  </sql>
+  
+  <sql id="fromAlias">
+   <include refid="from" /> <include refid="tblAlias" />
+  </sql>
+
+  <sql id="joinSD">
+    LEFT JOIN stock_data sd ON sd.stock_id = s.id
+  </sql>
+  
+  <sql id="joinMA">
+    LEFT JOIN ma ON ma.stock_id = s.id AND ma.date = sd.date
+  </sql>
+  
+  <sql id="joinStockData">
+    <include refid="com.xwguan.autofund.dao.stock.StockDao.joinSD" />
+    <include refid="com.xwguan.autofund.dao.stock.StockDao.joinMA" />
+  </sql>
+  
+  <sql id="joinLatest">
+    <include refid="com.xwguan.autofund.dao.stock.StockDao.joinSD" />
+      AND sd.date = (SELECT max(date) FROM stock_data sdmd WHERE sdmd.stock_id = s.id)
+    <include refid="com.xwguan.autofund.dao.stock.StockDao.joinMA" />
+  </sql>
+  
+  <sql id="joinDynamic">
+    <choose>
+      <when test="historyScope != null and historyScope.name() == 'LATEST'">
+        <include refid="com.xwguan.autofund.dao.stock.StockDao.joinLatest" />
+      </when>
+      <when test="historyScope != null and historyScope.name() == 'FULL'">
+        <include refid="com.xwguan.autofund.dao.stock.StockDao.joinStockData" />
+      </when>
+    </choose>
+  </sql>
+  
+  <sql id="joinDynamicIncludeLatest">
+    <if test="includeLatest != null and includeLatest">
+      <include refid="com.xwguan.autofund.dao.stock.StockDao.joinLatest" />
+    </if>
+  </sql>
+  
+  <!-- TABLE -->
+
+  <sql id="tblName">
+    stock
+  </sql>
+  
+  <sql id="tblAlias">
+    s
+  </sql>
+
+  <!-- COLUMNS -->
+
+  <sql id="colExcludeId">
+    symbol, 
+    name, 
+    is_index
+  </sql>
+
+  <sql id="colFull">
+    s.id s_id, 
+    s.symbol s_symbol, 
+    s.name s_name, 
+    s.is_index s_is_index
+  </sql>
+
+  <sql id="colStockData">
+    <include refid="com.xwguan.autofund.dao.stock.StockDataDao.colStockData" />,
+    <include refid="com.xwguan.autofund.dao.stock.MADao.colMA" />
+  </sql>
+  
+  <sql id="colDynamic">
+    <include refid="com.xwguan.autofund.dao.stock.StockDao.colFull" />
+    <if test="historyScope != null and historyScope.name() != 'NONE'">
+      , <include refid="com.xwguan.autofund.dao.stock.StockDao.colStockData" />
+    </if>
+  </sql>
+  
+  <sql id="colDynamicIncludeLatest">
+    <include refid="com.xwguan.autofund.dao.stock.StockDao.colFull" />
+    <if test="includeLatest != null and includeLatest">
+      , <include refid="com.xwguan.autofund.dao.stock.StockDao.colStockData" />
+    </if>
+  </sql>
+  
+  <sql id="valInsert">
+    #{symbol},
+    #{name},
+    #{index}
+  </sql>
+  
+  <sql id="colAndValUpdate">
+    symbol = #{symbol},
+    name = #{name},
+    is_index = #{index}
+  </sql>
+  
+  <!-- CUDBatch -->
+
+  <sql id="updateBatchSets">
+    symbol =
+      <foreach collection="list" item="item" open="CASE id" close="END,">
+        WHEN #{item.id} THEN #{item.symbol}
+      </foreach>
+    name =
+      <foreach collection="list" item="item" open="CASE id" close="END,">
+        WHEN #{item.id} THEN #{item.name}
+      </foreach>
+  </sql>
+  
+  <sql id="colInsertOrUpdate">
+    symbol = VALUES(symbol),
+    name = VALUES(name)
+  </sql>
+    
+  <sql id="valInsertBatchExcludeId">
+    #{item.symbol},
+    #{item.name},
+    #{item.index}
+  </sql>
+  
+    <!-- ORDERS -->
+  
+  <sql id="orderSymbol">
+    ORDER BY s.symbol ASC
+  </sql>
+
+  <sql id="orderSymbolDate">
+    ORDER BY s.symbol ASC, sd.date DESC
+  </sql>
+
+  <sql id="orderDateDynamic">
+    <if test="historyScope != null and historyScope.name() != 'NONE'">
+      ORDER BY sd.date DESC
+    </if>
+  </sql>
+
+</mapper>

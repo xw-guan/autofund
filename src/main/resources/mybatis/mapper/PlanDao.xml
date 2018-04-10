@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.xwguan.autofund.dao.plan.PlanDao">
+  <resultMap type="Plan" id="PlanResult">
+    <id column="pl_id" property="id" />
+    <result column="pl_user_id" property="userId" />
+    <result column="pl_name" property="name" />
+    <result column="execution_mode" property="executionMode" />
+    <result column="pl_is_activated" property="activated" />
+    <association property="account" resultMap="com.xwguan.autofund.dao.account.AccountDao.AccountResult" />
+    <!-- positionList, planTacticList, positionTacticList, planHistoryList的获取在PlanAssembler中实现 -->
+<!--     <collection property="positionList" resultMap="com.xwguan.autofund.dao.plan.PositionDao.PositionResult" /> -->
+<!--     <collection property="planTacticList" resultMap="com.xwguan.autofund.dao.plan.tactic.TacticDao.TacticResult" /> -->
+<!--     <collection property="positionTacticList" resultMap="com.xwguan.autofund.dao.plan.tactic.TacticDao.TacticResult"/> -->
+<!--     <collection property="planHistoryList" resultMap="com.xwguan.autofund.dao.plan.PlanHistoryDao.PlanHistoryResult" /> -->
+  </resultMap>
+
+  <select id="listByUserId" resultMap="PlanResult">
+    SELECT
+    <include refid="colFull" />
+    <include refid="fromAlias" />
+    WHERE pl.user_id = #{userId}
+  </select>
+
+  <select id="listIdByUserId" resultType="Long">
+    SELECT id
+    <include refid="from" />
+    WHERE user_id = #{userId}
+  </select>
+
+  <delete id="deleteByUserId">
+    DELETE
+    <include refid="from" />
+    WHERE user_id = #{userId}
+  </delete>
+
+  <!-- BaseDao -->
+
+  <select id="getById" resultMap="PlanResult">
+    <include refid="com.xwguan.autofund.dao.BaseDao.getById" />
+  </select>
+
+  <select id="count" resultType="long">
+    <include refid="com.xwguan.autofund.dao.BaseDao.count" />
+  </select>
+  
+  <insert id="insertAndSetId" useGeneratedKeys="true" keyProperty="id" parameterType="AssetHistory">
+    <include refid="com.xwguan.autofund.dao.BaseDao.insertAndSetId" />
+  </insert>
+
+  <update id="update" parameterType="AssetHistory">
+    <include refid="com.xwguan.autofund.dao.BaseDao.update" />
+  </update>
+
+  <delete id="deleteById">
+    <include refid="com.xwguan.autofund.dao.BaseDao.deleteById" />
+  </delete>
+
+  <!-- CUDBatchDao -->
+
+  <insert id="insertAndSetIdBatch" useGeneratedKeys="true" keyProperty="id" parameterType="AssetHistory">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.insertAndSetIdBatch" />
+  </insert>
+
+  <update id="updateBatch">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.updateBatch" />
+  </update>
+
+  <update id="updateOrInsertBatch">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.updateOrInsertBatch" />
+  </update>
+
+  <delete id="deleteByIdListBatch">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.deleteByIdListBatch" />
+  </delete>
+
+  <!-- COMMON SQLS -->
+
+  <!-- TABLE -->
+
+  <sql id="tblName">
+    plan
+  </sql>
+
+  <sql id="tblAlias">
+    pl
+  </sql>
+
+  <!-- COLUMNS AND FIELDS -->
+
+  <sql id="colExcludeId">
+    user_id,
+    name,
+    execution_mode,
+    is_activated
+  </sql>
+
+  <sql id="colFull">
+    pl.id pl_id,
+    pl.user_id pl_user_id,
+    pl.name pl_name,
+    pl.execution_mode,
+    pl.is_activated
+    pl_is_activated
+  </sql>
+
+  <sql id="valInsert">
+    #{userId},
+    #{name},
+    #{executionMode},
+    #{activated}
+  </sql>
+
+  <sql id="colAndValUpdate">
+    name = #{name},
+    execution_mode = #{executionMode},
+    is_activated = #{activated}
+  </sql>
+
+  <!-- CUDBatch -->
+
+  <sql id="updateBatchSets">
+    name =
+    <foreach collection="list" item="item" open="CASE id" close="END,">
+      WHEN #{item.id} THEN
+      #{item.name}
+    </foreach>
+    execution_mode =
+    <foreach collection="list" item="item" open="CASE id" close="END,">
+      WHEN #{item.id} THEN
+      #{item.executionMode}
+    </foreach>
+    is_activated =
+    <foreach collection="list" item="item" open="CASE id" close="END,">
+      WHEN #{item.id} THEN
+      #{item.activated}
+    </foreach>
+  </sql>
+
+  <sql id="colInsertOrUpdate">
+    name = VALUES(name),
+    execution_mode = VALUES(execution_mode),
+    is_activated =
+    VALUES(is_activated)
+  </sql>
+
+  <sql id="valInsertBatchExcludeId">
+    #{item.userId},
+    #{item.name},
+    #{item.executionMode},
+    #{item.activated}
+  </sql>
+
+  <!-- FROM AND JOIN -->
+
+  <sql id="from">
+    FROM
+    <include refid="tblName" />
+  </sql>
+
+  <sql id="fromAlias">
+    <include refid="from" />
+    <include refid="tblAlias" />
+  </sql>
+
+  <!-- ORDERS -->
+
+</mapper>

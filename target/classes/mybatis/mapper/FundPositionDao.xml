@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xwguan.autofund.dao.fund.FundPositionDao">
+  <resultMap type="FundPosition" id="FundPositionResult">
+    <id column="id" property="id" />
+    <result column="asset_allocation_id" property="assetAllocationId" />
+    <result column="security_type" property="securityType" typeHandler="org.apache.ibatis.type.EnumOrdinalTypeHandler" />
+    <result column="security_code" property="securityCode" />
+    <result column="position_pct" property="positionPct" />
+  </resultMap>
+
+  <select id="getFundPositionById" resultMap="FundPositionResult">
+    SELECT
+    <include refid="colFundPosition" />
+    <include refid="from" />
+    WHERE id = #{id}
+  </select>
+
+  <select id="listAllFundPosition" resultMap="FundPositionResult">
+    SELECT
+    <include refid="colFundPosition" />
+    <include refid="from" />
+    <include refid="orderAssetAllocationId" />
+  </select>
+
+  <select id="listFundPositionByAssetAllocationId" resultMap="FundPositionResult">
+    SELECT
+    <include refid="colFundPosition" />
+    <include refid="from" />
+    WHERE asset_allocation_id = #{assetAllocationId}
+    <include refid="orderSecurityTypeAndCode" />
+  </select>
+
+  <select id="listFundPositionBySecurityType" resultMap="FundPositionResult">
+    SELECT
+    <include refid="colFundPosition" />
+    <include refid="from" />
+    WHERE asset_allocation_id = #{assetAllocationId} AND security_type = #{securityType}
+    <include refid="orderSecurityCode" />
+  </select>
+
+  <insert id="insertFundPosition">
+    INSERT IGNORE INTO fund_position (
+    <include refid="colSimple" />
+    ) VALUES
+    <foreach collection="list" item="item" separator=",">
+      (
+      #{item.assetAllocationId},
+      #{item.securityType},
+      #{item.securityCode},
+      #{item.positionPct}
+      )
+    </foreach>
+  </insert>
+
+  <update id="updateFundPosition">
+    UPDATE fund_position SET
+      asset_allocation_id = #{fundPosition.assetAllocationId},
+      security_type = #{fundPosition.securityType.ordinal},
+      security_code = #{fundPosition.securityCode},
+      position_pct = #{fundPosition.positionPct}
+    WHERE id = #{fundPosition.id}
+  </update>
+  <!-- .ordinal取枚举常数, typeHandler=org.apache.ibatis.type.EnumOrdinalTypeHandler报错Failed to load ApplicationContext, 
+    why? -->
+
+  <delete id="deleteFundPositionById">
+    DELETE FROM fund_position WHERE id = #{id}
+  </delete>
+
+  <delete id="deleteFundPositionByAssetAllocationId">
+    DELETE FROM fund_position WHERE asset_allocation_id = #{assetAllocationId}
+  </delete>
+
+  <delete id="deleteFundPositionBatchByAssetAllocationId">
+    DELETE FROM fund_position
+    WHERE asset_allocation_id IN
+    <foreach collection="list" item="item" open="(" close=")" separator=",">
+      #{item}
+    </foreach>
+  </delete>
+
+  <delete id="deleteAll">
+    DELETE FROM fund_position WHERE 1 = 1;
+  </delete>
+
+
+  <!-- COMMON SQLS -->
+
+  <!-- FROM AND JOIN -->
+
+  <sql id="from">
+    FROM fund_position fp
+  </sql>
+
+  <!-- ORDERS -->
+
+  <sql id="orderAssetAllocationId">
+    ORDER BY fp.asset_allocation_id ASC
+  </sql>
+
+  <sql id="orderSecurityType">
+    ORDER BY fp.security_type ASC
+  </sql>
+
+  <sql id="orderSecurityCode">
+    ORDER BY fp.security_code ASC
+  </sql>
+
+  <sql id="orderSecurityTypeAndCode">
+    ORDER BY fp.security_type ASC, fp.security_code ASC
+  </sql>
+
+  <!-- COMMON SQLS -->
+
+  <!-- COLUMNS -->
+
+  <sql id="colSimple">
+    asset_allocation_id,
+    security_type,
+    security_code,
+    position_pct
+  </sql>
+
+  <sql id="colFundPosition">
+    fp.id,
+    fp.asset_allocation_id,
+    fp.security_type,
+    fp.security_code,
+    fp.position_pct
+  </sql>
+
+</mapper>

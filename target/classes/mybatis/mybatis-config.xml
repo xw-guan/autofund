@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+  <settings>
+    <!-- 允许jdbc支持自动生成主键 -->
+    <setting name="useGeneratedKeys" value="true" />
+    <!-- 开启自动驼峰命名规则映射, eg. A_COLUMN -> aColumn -->
+    <setting name="mapUnderscoreToCamelCase" value="true" />
+  </settings>
+<!--   <typeHandlers> -->
+<!--     <typeHandler handler="org.apache.ibatis.type.EnumOrdinalTypeHandler" javaType="java.math.RoundingMode" /> -->
+<!--   </typeHandlers> -->
+  <plugins>
+    <plugin interceptor="com.xwguan.autofund.interceptor.PageInterceptor"></plugin>
+  </plugins>
+</configuration>

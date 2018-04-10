@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.xwguan.autofund.dao.plan.tactic.TacticDao">
+
+  <resultMap type="com.xwguan.autofund.entity.plan.tactic.Tactic" id="TacticResult">
+    <id column="t_id" property="id" />
+    <result column="t_plan_id" property="planId" />
+    <result column="t_activated" property="activated" />
+    <association property="periodCondition" resultMap="com.xwguan.autofund.dao.plan.rule.PeriodConditionDao.PeriodConditionResult"/>
+    <collection property="ruleList" resultMap="com.xwguan.autofund.dao.plan.rule.RuleDao.RuleResult"/>
+  </resultMap>
+  
+  <sql id="getById">
+    SELECT
+    <include refid="com.xwguan.autofund.dao.plan.tactic.TacticDao.colConditionOperation" />
+    <include refid="fromAlias" />
+    <include refid="joinConditionOperation" />
+    WHERE <include refid="tblAlias" />.id = #{id}
+  </sql>
+  
+  <sql id="getByPlanId">
+    SELECT
+    <include refid="com.xwguan.autofund.dao.plan.tactic.TacticDao.colConditionOperation" />
+    <include refid="fromAlias" />
+    <include refid="joinConditionOperation" />
+    WHERE plan_id = #{planId}
+  </sql>
+  
+  <sql id="getIdByPlanId">
+    SELECT id <include refid="from" />
+    WHERE plan_id = #{planId}
+  </sql>
+  
+  <sql id="deleteByPlanId">
+    DELETE <include refid="from" /> WHERE plan_id = #{planId}
+  </sql>
+  
+  <sql id="setActivated">
+    UPDATE <include refid="tblName" /> SET activated = #{activated} WHERE id = #{id}
+  </sql>
+
+  <!-- TABLE -->
+  
+  <sql id="tblName" />
+  
+  <sql id="tblAlias" />
+
+  <!-- COLUMNS -->
+  
+  <sql id="colFull" />
+
+  <sql id="colConditionOperation">
+    <include refid="colFull" />,
+    <include refid="com.xwguan.autofund.dao.plan.rule.PeriodConditionDao.colFull" />,
+    <include refid="com.xwguan.autofund.dao.plan.rule.RuleDao.colConditionOperation" />
+  </sql>
+
+  <!-- FROM AND JOIN -->
+
+  <sql id="from" />
+  
+  <sql id="fromAlias" />
+  
+  <sql id="joinConditionOperation">
+    LEFT JOIN period_condition pc ON <include refid="tblAlias" />.id = pc.tactic_id
+    LEFT JOIN rule r ON <include refid="tblAlias" />.id = r.tactic_id
+    <include refid="com.xwguan.autofund.dao.plan.rule.RuleDao.joinConditionOperation" />
+  </sql>
+
+</mapper>

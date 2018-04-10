@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xwguan.autofund.dao.fund.AssetAllocationDao">
+  <resultMap type="AssetAllocation" id="AssetAllocationResult">
+    <id column="aa_id" property="id" />
+    <result column="aa_fund_id" property="fundId" />
+    <result column="aa_date" property="date" />
+    <result column="stock_pct" property="stockPct" />
+    <result column="debenture_pct" property="debenturePct" />
+    <result column="cash_pct" property="cashPct" />
+    <result column="fund_pct" property="fundPct" />
+    <result column="net_asset" property="netAsset" />
+    <collection property="stockList"
+      resultMap="com.xwguan.autofund.dao.fund.FundPositionDao.FundPositionResult" columnPrefix="sl_" />
+    <collection property="debentureList"
+      resultMap="com.xwguan.autofund.dao.fund.FundPositionDao.FundPositionResult" columnPrefix="dl_" />
+    <collection property="fundList"
+      resultMap="com.xwguan.autofund.dao.fund.FundPositionDao.FundPositionResult" columnPrefix="fl_" />
+  </resultMap>
+
+  <select id="getAssetAllocationById" resultMap="AssetAllocationResult">
+    SELECT
+    <include refid="colAssetAllocation" />
+    <include refid="from" />
+    <include refid="joinFundPositionOfSecurityTypes" />
+    WHERE aa.id = #{id}
+    <include refid="orderFundIdAndPositionPct" />
+  </select>
+
+  <select id="getAssetAllocationByFundId" resultMap="AssetAllocationResult">
+    SELECT
+    <include refid="colAssetAllocation" />
+    <include refid="from" />
+    <include refid="joinFundPositionOfSecurityTypes" />
+    WHERE aa.fund_id = #{fundId}
+    <include refid="orderFundIdAndPositionPct" />
+  </select>
+  
+  <select id="listAllAssetAllocation" resultMap="AssetAllocationResult">
+    SELECT
+    <include refid="colAssetAllocation" />
+    <include refid="from" />
+    <include refid="joinFundPositionOfSecurityTypes" />
+    <include refid="orderFundIdAndPositionPct" />
+  </select>
+
+  <insert id="insertAssetAllocation">
+    INSERT IGNORE INTO asset_allocation ( <include refid="colSimple" /> ) VALUES
+    <foreach collection="list" item="item" separator=",">
+      ( <include refid="valCUDBatch" /> )
+    </foreach>
+  </insert>
+
+  <update id="updateAssetAllocation">
+    UPDATE asset_allocation SET
+      fund_id = #{assetAllocation.fundId},
+      date = #{assetAllocation.date},
+      stock_pct = #{assetAllocation.stockPct},
+      debenture_pct = #{assetAllocation.debenturePct},
+      cash_pct = #{assetAllocation.cashPct},
+      fund_pct = #{assetAllocation.fundPct},
+      net_asset = #{assetAllocation.netAsset}
+    WHERE id = #{assetAllocation.id}
+  </update>
+
+  <delete id="deleteAssetAllocationById">
+    DELETE FROM asset_allocation WHERE id = #{id}
+  </delete>
+
+  <delete id="deleteAssetAllocationByFundId">
+    DELETE FROM asset_allocation WHERE fund_id = #{fundId}
+  </delete>
+
+  <delete id="deleteAssetAllocationBatchByFundId">
+    DELETE FROM asset_allocation
+    WHERE fund_id IN
+    <foreach collection="list" item="item" open="(" close=")" separator=",">
+      #{item}
+    </foreach>
+  </delete>
+
+  <delete id="deleteAll">
+    DELETE FROM asset_allocation WHERE 1 = 1;
+  </delete>
+  
+  <!-- CUDBatchDao -->
+    
+  <insert id="insertAndSetIdBatch" useGeneratedKeys="true" keyProperty="id" parameterType="AssetAllocation">
+    INSERT IGNORE INTO asset_allocation( <include refid="colSimple" /> ) VALUES
+    <foreach collection="list" item="item" separator=",">
+      ( <include refid="valCUDBatch" /> )
+    </foreach>
+  </insert>
+  
+  <update id="updateBatch" useGeneratedKeys="true" keyProperty="id" parameterType="AssetAllocation">
+    REPLACE INTO asset_allocation (id, <include refid="colSimple" />) VALUES 
+    <foreach collection="list" item="item" separator=",">
+      ( #{item.id}, <include refid="valCUDBatch" />)
+    </foreach>
+  </update>
+  
+  <update id="updateBatchByCode">
+    REPLACE INTO asset_allocation (id, <include refid="colSimple" />) VALUES 
+    <foreach collection="list" item="item" separator=",">
+      ( (SELECT aa.id FROM asset_allocation aa WHERE aa.fund_id = #{item.fundId}), <include refid="valCUDBatch" /> )
+    </foreach>
+  </update>
+  
+  <delete id="deleteBatch">
+    DELETE FROM asset_allocation WHERE id IN
+    <foreach collection="list" item="item" open="(" close=")" separator=",">
+      #{item.id}
+    </foreach>
+  </delete>
+
+  <!-- COMMON SQLS -->
+
+  <!-- COLUMNS -->
+
+  <sql id="colSimple">
+    fund_id,
+    date,
+    stock_pct,
+    debenture_pct,
+    cash_pct,
+    fund_pct,
+    net_asset
+  </sql>
+
+  <sql id="colAssetAllocation">
+    aa.id aa_id,
+    aa.fund_id aa_fund_id,
+    aa.date aa_date,
+    aa.stock_pct,
+    aa.debenture_pct,
+    aa.cash_pct,
+    aa.fund_pct,
+    aa.net_asset,
+    sl_id,
+    sl_asset_allocation_id,
+    sl_security_type,
+    sl_security_code,
+    sl_position_pct,
+    dl_id,
+    dl_asset_allocation_id,
+    dl_security_type,
+    dl_security_code,
+    dl_position_pct,
+    fl_id,
+    fl_asset_allocation_id,
+    fl_security_type,
+    fl_security_code,
+    fl_position_pct
+  </sql>
+
+  <!-- FROM AND JOIN -->
+
+  <sql id="from">
+    FROM asset_allocation aa
+  </sql>
+
+  <!-- select stock (security_type = 0), debenture (security_type = 1), fund (security_type = 2) from fund_position-->
+  <sql id="joinFundPositionOfSecurityTypes">
+    LEFT JOIN (
+      SELECT 
+        fp.id sl_id,
+        fp.asset_allocation_id sl_asset_allocation_id,
+        fp.security_type sl_security_type,
+        fp.security_code sl_security_code,
+        fp.position_pct sl_position_pct
+      FROM fund_position fp
+      WHERE fp.security_type = 0
+    ) sl ON sl.sl_asset_allocation_id = aa.id
+    LEFT JOIN (
+      SELECT
+        fp.id dl_id,
+        fp.asset_allocation_id dl_asset_allocation_id,
+        fp.security_type dl_security_type,
+        fp.security_code dl_security_code,
+        fp.position_pct dl_position_pct
+      FROM fund_position fp
+      WHERE fp.security_type = 1
+    ) dl ON dl.dl_asset_allocation_id = aa.id
+    LEFT JOIN (
+      SELECT
+        fp.id fl_id,
+        fp.asset_allocation_id fl_asset_allocation_id,
+        fp.security_type fl_security_type,
+        fp.security_code fl_security_code,
+        fp.position_pct fl_position_pct
+      FROM fund_position fp
+      WHERE fp.security_type = 2
+    ) fl ON fl.fl_asset_allocation_id = aa.id
+  </sql>
+
+  <!-- ORDERS -->
+
+  <sql id="orderFundId">
+    ORDER BY aa_fund_id ASC
+  </sql>
+  
+  <sql id="orderFundIdAndPositionPct">
+    ORDER BY aa_fund_id ASC, sl_position_pct DESC, dl_position_pct DESC, fl_position_pct DESC
+  </sql>
+  
+  <sql id="valCUDBatch">
+    #{item.fundId},
+    #{item.date},
+    #{item.stockPct},
+    #{item.debenturePct},
+    #{item.cashPct},
+    #{item.fundPct},
+    #{item.netAsset}
+  </sql>
+</mapper>

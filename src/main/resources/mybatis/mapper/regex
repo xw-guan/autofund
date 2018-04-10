@@ -1,0 +1,11 @@
+^[^"]+column="([\w]+)"[^"]+property="([\w]+)"[^"]+$
+replace with 
+    $1,
+replace with 
+    #{$2},
+replace with 
+    $1 = #{$2},
+    
+([\w]+)[^\w]+([\w]+)[^\w]+
+replace with
+    $1 =\n      <foreach collection="list" item="item" open="CASE id" close="END,">\n        WHEN #{item.id} THEN #{item.$2}\n      </foreach>\n

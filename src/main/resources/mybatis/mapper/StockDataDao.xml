@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xwguan.autofund.dao.stock.StockDataDao">
+  <resultMap type="StockData" id="StockDataResult">
+    <id column="sd_id" property="id" />
+    <result column="sd_stock_id" property="stockId" />
+    <result column="sd_date" property="date" />
+    <result column="close" property="close" />
+    <result column="high" property="high" />
+    <result column="low" property="low" />
+    <result column="open" property="open" />
+    <result column="pclose" property="pclose" />
+    <result column="chg" property="chg" />
+    <result column="pchg" property="pchg" />
+    <result column="voturnover" property="voturnover" />
+    <result column="vaturnover" property="vaturnover" />
+    <result column="turnover" property="turnover" />
+    <result column="tcap" property="tcap" />
+    <result column="macp" property="mcap" />
+  </resultMap>
+  <resultMap id="mapResultMap" type="HashMap">
+    <result property="key" column="date" />
+    <result property="value" column="close" />
+  </resultMap>
+
+  <select id="listAllStockData" resultMap="StockDataResult">
+    SELECT
+    <include refid="colStockData" />
+    FROM stock_data sd
+    INNER JOIN stock s ON sd.stock_id = s.id
+    ORDER BY s.symbol ASC, sd.date DESC
+  </select>
+
+  <select id="listStockDataByStockId" resultMap="StockDataResult">
+    SELECT
+    <include refid="colStockData" />
+    FROM stock_data sd
+    WHERE stock_id = #{stockId}
+    ORDER BY date DESC
+  </select>
+
+  <select id="listStockDataByDateRange" resultMap="StockDataResult">
+    SELECT
+    <include refid="colStockData" />
+    FROM stock_data sd
+    WHERE stock_id = #{stockId}
+    AND date BETWEEN #{start} AND #{end}
+    ORDER BY date DESC
+  </select>
+
+  <select id="listStockDataTradeDaysBefore" resultMap="StockDataResult">
+    SELECT
+    <include refid="colStockData" />
+    FROM stock_data sd
+    WHERE stock_id = #{stockId}
+    AND date &lt;= #{date}
+    ORDER BY date DESC
+    LIMIT #{tradeDays}
+  </select>
+
+  <select id="listCloseTradeDaysBefore" resultType="Double">
+    SELECT sd.close
+    FROM stock_data sd
+    WHERE
+    stock_id = #{stockId}
+    AND date &lt;= #{date}
+    ORDER BY date DESC
+    LIMIT #{tradeDays}
+  </select>
+
+  <select id="listDateByDateRange" resultType="java.time.LocalDate">
+    SELECT sd.date sd_date
+    FROM stock_data sd
+    WHERE
+    stock_id = #{stockId}
+    AND date BETWEEN #{start} AND #{end}
+    ORDER BY date DESC
+  </select>
+
+  <select id="getLatestDate" resultType="java.time.LocalDate">
+    SELECT max(date) FROM stock_data WHERE stock_id =
+    #{stockId}
+  </select>
+
+  <select id="getStockDataByStockIdAndDate" resultMap="StockDataResult">
+    SELECT
+    <include refid="colStockData" />
+    FROM stock_data sd
+    WHERE sd.stock_id = #{stockId} AND sd.date = #{date}
+  </select>
+
+  <select id="getStockDataTradeDaysBefore" resultMap="StockDataResult">
+    SELECT
+    <include refid="colStockData" />
+    FROM stock_data sd
+    WHERE stock_id = #{stockId} AND date &lt;= #{date}
+    ORDER BY date DESC
+    LIMIT
+    #{days}, 1
+  </select>
+
+  <select id="getLatestStockData" resultMap="StockDataResult">
+    SELECT
+    <include refid="colStockData" />
+    FROM stock_data sd, (SELECT max(date) date FROM stock_data WHERE stock_id = #{stockId}) m
+    WHERE
+    sd.date = m.date
+  </select>
+
+  <insert id="insertStockData">
+    INSERT IGNORE INTO stock_data (
+    <include refid="colSimple" />
+    ) VALUES
+    <foreach collection="list" item="item" separator=",">
+      (
+      #{item.stockId},
+      #{item.date},
+      #{item.close},
+      #{item.high},
+      #{item.low},
+      #{item.open},
+      #{item.pclose},
+      #{item.chg},
+      #{item.pchg},
+      #{item.voturnover},
+      #{item.vaturnover},
+      #{item.turnover},
+      #{item.tcap},
+      #{item.mcap}
+      )
+    </foreach>
+  </insert>
+
+  <update id="updateStockData">
+    <!-- todo -->
+  </update>
+
+  <delete id="deleteStockDataByStockIdAndDate">
+    DELETE FROM stock_data
+    WHERE stock_id = #{stockId} AND date = #{date}
+  </delete>
+
+  <delete id="deleteStockDataByStockId">
+    DELETE FROM stock_data
+    WHERE stock_id = #{stockId}
+  </delete>
+
+  <delete id="deleteStockDataBatchByStockId">
+    DELETE FROM stock_data
+    WHERE stock_id IN
+    <foreach collection="list" item="item" open="(" close=")" separator=",">
+      #{item}
+    </foreach>
+  </delete>
+
+  <delete id="deleteAll">
+    DELETE FROM stock_data WHERE 1 = 1;
+  </delete>
+
+  <!-- COLUMNS -->
+
+  <sql id="colSimple">
+    stock_id,
+    date,
+    close,
+    high,
+    low,
+    open,
+    pclose,
+    chg,
+    pchg,
+    voturnover,
+    vaturnover,
+    turnover,
+    tcap,
+    mcap
+  </sql>
+
+  <sql id="colStockData">
+    sd.id sd_id,
+    sd.stock_id sd_stock_id,
+    sd.date sd_date,
+    sd.close,
+    sd.high,
+    sd.low,
+    sd.open,
+    sd.pclose,
+    sd.chg,
+    sd.pchg,
+    sd.voturnover,
+    sd.vaturnover,
+    sd.turnover,
+    sd.tcap,
+    sd.mcap
+  </sql>
+
+</mapper>

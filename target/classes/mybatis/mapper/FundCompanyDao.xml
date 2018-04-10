@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xwguan.autofund.dao.fund.FundCompanyDao">
+  <resultMap type="FundCompany" id="FundCompanyResult">
+    <id column="fc_id" property="id" />
+    <result column="fc_code" property="code" />
+    <result column="fc_sname" property="sname" />
+    <result column="fc_fname" property="fname" />
+    <result column="fc_pinyin_sname" property="pinyinSname" />
+    <result column="fc_abbr_pinyin_sname" property="abbrPinyinSname" />
+  </resultMap>
+
+  <select id="getFundCompanyById" resultMap="FundCompanyResult">
+    SELECT
+    <include refid="colFundCompany" />
+    <include refid="from" />
+    WHERE fc.id = #{id}
+  </select>
+
+  <select id="getFundCompanyByCode" resultMap="FundCompanyResult">
+    SELECT
+    <include refid="colFundCompany" />
+    <include refid="from" />
+    WHERE fc.code = #{code}
+  </select>
+
+  <select id="listAllFundCompany" resultMap="FundCompanyResult">
+    SELECT
+    <include refid="colFundCompany" />
+    <include refid="from" />
+    <include refid="orderCode" />
+  </select>
+
+  <select id="listFundCompanyBySearchField" resultMap="FundCompanyResult">
+    SELECT
+    <include refid="colFundCompany" />
+    <include refid="from" />
+    WHERE fc.code LIKE #{searchField} '%' OR fc.sname LIKE #{searchField} '%' OR fc.fname LIKE #{searchField} '%'
+      OR fc.pinyin_sname LIKE #{searchField} '%' OR fc.abbr_pinyin_sname LIKE #{searchField} '%'
+    <include refid="orderCode" />
+  </select>
+
+  <select id="countFundCompany" resultType="int">
+    SELECT count(*) FROM fund_company
+  </select>
+
+  <insert id="insertFundCompany">
+    INSERT IGNORE INTO fund_company( <include refid="colSimple" /> ) VALUES
+    <foreach collection="list" item="item" separator=",">
+      (#{item.code},#{item.sname},#{item.fname},#{item.pinyinSname},#{item.abbrPinyinSname})
+    </foreach>
+  </insert>
+  
+  <insert id="insertAndGetId" useGeneratedKeys="true" keyProperty="id" parameterType="FundCompany">
+    INSERT IGNORE INTO fund_company( <include refid="colSimple" /> ) VALUES
+      (#{code},#{sname},#{fname},#{pinyinSname},#{abbrPinyinSname})
+  </insert>
+
+  <update id="updateFundCompany">
+    UPDATE fund_company SET
+      code = #{fundCompany.code},
+      sname = #{fundCompany.sname},
+      fname = #{fundCompany.fname},
+      pinyin_sname = #{fundCompany.pinyinSname},
+      abbr_pinyin_sname = #{fundCompany.abbrPinyinSname}
+    WHERE id = #{fundCompany.id}
+  </update>
+
+  <delete id="deleteFundCompanyById">
+    DELETE FROM fund_company WHERE id = #{id}
+  </delete>
+
+  <delete id="deleteFundCompanyBatchById">
+    DELETE FROM fund_company WHERE id IN
+    <foreach collection="list" item="item" open="(" close=")" separator=",">
+      #{item}
+    </foreach>
+  </delete>
+  
+  <!-- CUDBatchDao -->
+    
+  <insert id="insertAndSetIdBatch">
+    INSERT IGNORE INTO fund_company( <include refid="colSimple" /> ) VALUES
+    <foreach collection="list" item="item" separator=",">
+      (<include refid="valCUDBatch" />)
+    </foreach>
+  </insert>
+  
+  <update id="updateBatch">
+    REPLACE INTO fund_company (id, <include refid="colSimple" />) VALUES 
+    <foreach collection="list" item="item" separator=",">
+      (
+        #{item.id},
+        <include refid="valCUDBatch" />
+      )
+    </foreach>
+  </update>
+  
+  <update id="updateBatchByCode">
+    REPLACE INTO fund_company (id, <include refid="colSimple" />) VALUES 
+    <foreach collection="list" item="item" separator=",">
+      (
+        (SELECT fc.id FROM fund_company fc WHERE fc.code = #{item.code}),
+        <include refid="valCUDBatch" />
+      )
+    </foreach>
+  </update>
+  
+  <delete id="deleteBatch">
+    DELETE FROM fund_company WHERE id IN
+    <foreach collection="list" item="item" open="(" close=")" separator=",">
+      #{item.id}
+    </foreach>
+  </delete>
+  
+  <!-- COMMON SQLS -->
+
+  <!-- FROM AND JOIN -->
+
+  <sql id="from">
+    FROM fund_company fc
+  </sql>
+
+  <!-- ORDERS -->
+
+  <sql id="orderCode">
+    ORDER BY fc.code ASC
+  </sql>
+
+  <!-- COLUMNS -->
+
+  <sql id="colSimple">
+    code, sname, fname, pinyin_sname, abbr_pinyin_sname
+  </sql>
+
+  <sql id="colFundCompany">
+    fc.id fc_id,
+    fc.code fc_code,
+    fc.sname fc_sname,
+    fc.fname fc_fname,
+    fc.pinyin_sname fc_pinyin_sname,
+    fc.abbr_pinyin_sname fc_abbr_pinyin_sname
+  </sql>
+  
+  <sql id="valCUDBatch">
+    #{item.code},
+    #{item.sname},
+    #{item.fname},
+    #{item.pinyinSname},
+    #{item.abbrPinyinSname}
+  </sql>
+
+</mapper>

@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.xwguan.autofund.dao.plan.rule.PeriodConditionDao">
+  <resultMap type="PeriodCondition" id="PeriodConditionResult">
+    <id column="pc_id" property="id" />
+    <result column="pc_tactic_id" property="tacticId" />
+    <result column="pc_tactic_type" property="tacticType" />
+    <result column="period" property="period" />
+    <result column="day_of_period" property="dayOfPeriod" />
+    <result column="last_invest_date" property="lastInvestDate" />
+    <result column="next_invest_date" property="nextInvestDate" />
+    <result column="next_invest_date_in_theory" property="nextInvestDateInTheory" />
+  </resultMap>
+  
+  <select id="getByTacticIdAndType" resultMap="PeriodConditionResult">
+    SELECT
+    <include refid="colFull" />
+    <include refid="fromAlias" />
+    WHERE tactic_id = #{tacticId} and tactic_type = #{tacticType}
+  </select>
+  
+  <delete id="deleteByTacticIdAndType">
+    DELETE <include refid="from" /> 
+    WHERE tactic_id = #{tacticId} and tactic_type = #{tacticType}
+  </delete>
+
+  <!-- BaseDao -->
+  
+  <select id="getById" resultMap="PeriodConditionResult">
+    <include refid="com.xwguan.autofund.dao.BaseDao.getById" />
+  </select>
+
+  <select id="count" resultType="long">
+    <include refid="com.xwguan.autofund.dao.BaseDao.count" />
+  </select>
+  
+  <insert id="insertAndSetId" useGeneratedKeys="true" keyProperty="id" parameterType="PeriodCondition">
+    <include refid="com.xwguan.autofund.dao.BaseDao.insertAndSetId" />
+  </insert>
+  
+  <update id="update" parameterType="PeriodCondition">
+    <include refid="com.xwguan.autofund.dao.BaseDao.update" />
+  </update>
+
+  <delete id="deleteById">
+    <include refid="com.xwguan.autofund.dao.BaseDao.deleteById" />
+  </delete>
+
+  <!-- CUDBatchDao -->
+    
+  <insert id="insertAndSetIdBatch" useGeneratedKeys="true" keyProperty="id" parameterType="PeriodCondition">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.insertAndSetIdBatch" />
+  </insert>
+  
+  <update id="updateBatch">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.updateBatch" />
+  </update>
+  
+  <update id="updateOrInsertBatch">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.updateOrInsertBatch" />
+  </update>
+  
+  <delete id="deleteByIdListBatch">
+    <include refid="com.xwguan.autofund.dao.CUDBatchDao.deleteByIdListBatch" />
+  </delete>
+
+  <!-- COMMON SQLS -->
+  
+  <!-- TABLE -->
+  
+  <sql id="tblName">
+    period_condition
+  </sql>
+  
+  <sql id="tblAlias">
+    pc
+  </sql>
+
+  <!-- COLUMNS -->
+
+  <sql id="colExcludeId">
+    tactic_id,
+    tactic_type,
+    period,
+    day_of_period,
+    last_invest_date,
+    next_invest_date,
+    next_invest_date_in_theory
+  </sql>
+  
+  <sql id="colFull">
+    pc.id pc_id,
+    pc.tactic_id pc_tactic_id,
+    pc.tactic_type pc_tactic_type,
+    pc.period,
+    pc.day_of_period,
+    pc.last_invest_date,
+    pc.next_invest_date,
+    pc.next_invest_date_in_theory
+  </sql>
+  
+  <sql id="valInsert">
+    #{tacticId},
+    #{tacticType},
+    #{period},
+    #{dayOfPeriod},
+    #{lastInvestDate},
+    #{nextInvestDate},
+    #{nextInvestDateInTheory}
+  </sql>
+  
+  <sql id="colAndValUpdate">
+    period = #{period},
+    day_of_period = #{dayOfPeriod},
+    last_invest_date = #{lastInvestDate},
+    next_invest_date = #{nextInvestDate},
+    next_invest_date_in_theory = #{nextInvestDateInTheory}
+  </sql>
+    
+  <!-- CUDBatch -->
+
+  <sql id="updateBatchSets">
+    period =
+      <foreach collection="list" item="item" open="CASE id" close="END,">
+        WHEN #{item.id} THEN #{item.period}
+      </foreach>
+    day_of_period =
+      <foreach collection="list" item="item" open="CASE id" close="END,">
+        WHEN #{item.id} THEN #{item.dayOfPeriod}
+      </foreach>
+    last_invest_date =
+      <foreach collection="list" item="item" open="CASE id" close="END,">
+        WHEN #{item.id} THEN #{item.lastInvestDate}
+      </foreach>
+    next_invest_date =
+      <foreach collection="list" item="item" open="CASE id" close="END,">
+        WHEN #{item.id} THEN #{item.nextInvestDate}
+      </foreach>
+    next_invest_date_in_theory =
+      <foreach collection="list" item="item" open="CASE id" close="END,">
+        WHEN #{item.id} THEN #{item.nextInvestDateInTheory}
+      </foreach>
+  </sql>
+  
+  <sql id="colInsertOrUpdate">
+    period = VALUES(period),
+    day_of_period = VALUES(day_of_period),
+    last_invest_date = VALUES(last_invest_date),
+    next_invest_date = VALUES(next_invest_date),
+    next_invest_date_in_theory = VALUES(next_invest_date_in_theory)
+  </sql>
+    
+  <sql id="valInsertBatchExcludeId">
+    #{item.tacticId},
+    #{item.tacticType},
+    #{item.period},
+    #{item.dayOfPeriod},
+    #{item.lastInvestDate},
+    #{item.nextInvestDate},
+    #{item.nextInvestDateInTheory}
+  </sql>
+
+  <!-- FROM AND JOIN -->
+
+  <sql id="from">
+    FROM <include refid="tblName" />
+  </sql>
+  
+  <sql id="fromAlias">
+   <include refid="from" /> <include refid="tblAlias" />
+  </sql>
+
+  <!-- ORDERS -->
+
+</mapper>
