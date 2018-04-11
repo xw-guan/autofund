@@ -10,9 +10,11 @@ import com.xwguan.autofund.dao.fund.FundDao;
 import com.xwguan.autofund.dao.stock.StockDao;
 import com.xwguan.autofund.entity.plan.portfolio.Position;
 import com.xwguan.autofund.enums.AccountOwnerTypeEnum;
+import com.xwguan.autofund.enums.SymbolFormatEnum;
 import com.xwguan.autofund.exception.io.InvalidFundCodeException;
 import com.xwguan.autofund.exception.io.InvalidTickerSymbolException;
 import com.xwguan.autofund.service.template.account.AccountTemplate;
+import com.xwguan.autofund.util.CodeUtils;
 
 /**
  * 持仓模板
@@ -70,9 +72,15 @@ public class PositionTemplate {
 
     public Position of(String fundCode, String refIndexSymbol)
         throws InvalidFundCodeException, InvalidTickerSymbolException {
+        if (!CodeUtils.isFundCode(fundCode)) {
+            throw new InvalidFundCodeException("Invalid fundCode");
+        }
         Integer fundId = fundDao.getIdByCode(fundCode);
         if (fundId == null) {
             throw new InvalidFundCodeException("Invalid fundCode");
+        }
+        if (!CodeUtils.isSymbolMatchFormat(refIndexSymbol, SymbolFormatEnum.AUTOFUND)) {
+            throw new InvalidTickerSymbolException("Invalid tickerSymbol");
         }
         Integer refIndexId = stockDao.getIdBySymbol(refIndexSymbol);
         if (refIndexId == null) {

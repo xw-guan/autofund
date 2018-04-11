@@ -161,7 +161,7 @@ public class PlanServiceImpl implements PlanService {
             positionService.insertPosition(positionList);
         }
         // insert tactics if present
-        List<Tactic> tacticList = getAllTacticsFromPlan(plan);
+        List<Tactic> tacticList = listAllTacticsFromPlan(plan);
         if (CollectionUtils.isNotEmpty(tacticList)) {
             tacticList.stream().forEach(t -> t.setPlanId(planId));
             tacticSerVice.insertTactic(tacticList);
@@ -189,7 +189,7 @@ public class PlanServiceImpl implements PlanService {
     @Override
     @Transactional
     public int updateTactics(Plan plan) {
-        int cntUpdTacticSum = getAllTacticsFromPlan(plan).stream().mapToInt(t -> tacticSerVice.updateTactic(t)).sum();
+        int cntUpdTacticSum = listAllTacticsFromPlan(plan).stream().mapToInt(t -> tacticSerVice.updateTactic(t)).sum();
         logger.debug("cntUpdTacticSum = " + cntUpdTacticSum);
         return cntUpdTacticSum;
     }
@@ -292,7 +292,7 @@ public class PlanServiceImpl implements PlanService {
     /**
      * 从Plan对象中获取全部策略列表
      */
-    private List<Tactic> getAllTacticsFromPlan(Plan plan) {
+    private List<Tactic> listAllTacticsFromPlan(Plan plan) {
         return plan.handler().setConnDbForData(false).getAllTactics();
     }
 }

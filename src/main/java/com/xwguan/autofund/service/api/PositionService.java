@@ -35,7 +35,7 @@ public interface PositionService {
     List<Position> listByPlanId(Long planId, Boolean includeLatestAccountHistory, Page page);
 
     /**
-     * 获取持仓模板
+     * 获取持仓模板, 其中计划id为-1
      * 
      * @param fundCode 基金代码
      * @param refIndexSymbol 参考指数代码

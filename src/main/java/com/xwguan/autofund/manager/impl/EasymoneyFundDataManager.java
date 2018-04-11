@@ -503,7 +503,6 @@ public class EasymoneyFundDataManager implements FundDataManager {
      * @param resultMap 方法getFundDetail的resultMap
      * @return
      */
-    @SuppressWarnings("unused")
     private List<SimilarTypeRankingHistory> parseSimilarTypeRankingHistory(Map<?, ?> resultMap) {
         // 同类排名
         List<SimilarTypeRankingHistory> rankingHistoryList = new ArrayList<>();

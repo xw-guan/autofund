@@ -1,5 +1,6 @@
 package com.xwguan.autofund.controller;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import com.xwguan.autofund.dto.plan.tactic.TacticDto;
 import com.xwguan.autofund.entity.plan.tactic.Tactic;
 import com.xwguan.autofund.enums.TacticTypeEnum;
 import com.xwguan.autofund.exception.plan.TacticTemplateException;
+import com.xwguan.autofund.exception.plan.TacticTypeException;
 import com.xwguan.autofund.service.api.TacticService;
 import com.xwguan.autofund.service.mapper.tactic.TacticsMapper;
 
@@ -24,13 +26,13 @@ public class TacticController {
 
     @Autowired
     private TacticService tacticService;
-    
+
     @Autowired
     private TacticsMapper tacticsMapper;
 
-    @RequestMapping(value = "/template/all", method = RequestMethod.GET)
+    @RequestMapping(value = "/templateResults", method = RequestMethod.GET)
     @ResponseBody
-    public Result<List<TacticDto>> getAllTacticTemplate() {
+    public Result<List<TacticDto>> listAllTacticTemplate() {
         try {
             List<Tactic> tactics = tacticService.listAllTacticTemplate();
             List<TacticDto> tacticDtos = tacticsMapper.toTacticDtoList(tactics);
@@ -43,7 +45,7 @@ public class TacticController {
     /**
      * url like
      * <code>
-     * /tactic/template/MA250
+     * /tactic/templateResult/MA250
      * </code>
      * templateCode取值
      * <ul>
@@ -59,7 +61,7 @@ public class TacticController {
      * @param templateCode
      * @return
      */
-    @RequestMapping(value = "/template/{templateCode}", method = RequestMethod.GET)
+    @RequestMapping(value = "/templateResult/{templateCode}", method = RequestMethod.GET)
     @ResponseBody
     public Result<TacticDto> getTacticTemplate(@PathVariable("templateCode") String templateCode) {
         try {
@@ -79,14 +81,25 @@ public class TacticController {
      * <code>
      * /tactic/MAT/668
      * </code>
+     * tacticType取值
+     * <ul>
+     * <li>GLT: 盈亏策略
+     * <li>ICT: 指数变化策略
+     * <li>MAT: 均线策略
+     * <li>NCT: 净值变化策略
+     * <li>PBT: 定期买入策略
+     * <li>PTT: 计划止盈策略
+     * </ul>
+     * 
      * @see TacticTypeEnum
      * @return
+     *         TODO 未测试
      */
     @RequestMapping(value = "/{tacticType}/{tacticId}", method = RequestMethod.DELETE)
     @ResponseBody
     public Result<String> deleteTactic(@PathVariable("tacticId") Long tacticId,
         @PathVariable("tacticType") String tacticTypeCode) {
-        
+
         TacticTypeEnum tacticType = TacticTypeEnum.of(tacticTypeCode);
         try {
             int cntDelTactic = tacticService.deleteTactic(tacticId, tacticType);
@@ -103,15 +116,56 @@ public class TacticController {
      * <code>
      * /tactic/MAT/668
      * </code>
+     * 
      * @see TacticTypeEnum
      * @return
+     *         TODO 未测试
      */
     @RequestMapping(value = "/{tacticType}/{tacticId}", method = RequestMethod.PUT)
     @ResponseBody
+    public Result<String> updateTactic(@PathVariable("tacticId") Long tacticId,
+        @PathVariable("tacticType") String tacticTypeCode,
+        @RequestParam("tacticDto") String tacticDtoJson) {
+
+        TacticTypeEnum tacticType = TacticTypeEnum.of(tacticTypeCode);
+        try {
+            Tactic tactic = tacticsMapper.toTactic(tacticDtoJson, tacticType);
+            int cntUpdTactic = tacticService.updateTactic(tactic);
+            return cntUpdTactic > 0
+                ? new Result<>(true, "成功更新")
+                : new Result<>(false, "策略不存在");
+        } catch (IOException | TacticTypeException e) {
+            return new Result<>(false, "解析json失败");
+        } catch (Exception e) {
+            return new Result<>(false, "删除策略失败");
+        }
+    }
+
+    /**
+     * url like
+     * <code>
+     * /tactic/MAT/668
+     * </code>
+     * tacticType取值
+     * <ul>
+     * <li>GLT: 盈亏策略
+     * <li>ICT: 指数变化策略
+     * <li>MAT: 均线策略
+     * <li>NCT: 净值变化策略
+     * <li>PBT: 定期买入策略
+     * <li>PTT: 计划止盈策略
+     * </ul>
+     * 
+     * @see TacticTypeEnum
+     * @return
+     *         TODO 未测试
+     */
+    @RequestMapping(value = "/{tacticType}/{tacticId}/activated", method = RequestMethod.PUT)
+    @ResponseBody
     public Result<String> setActivated(@PathVariable("tacticId") Long tacticId,
-        @PathVariable("tacticType") String tacticTypeCode, 
+        @PathVariable("tacticType") String tacticTypeCode,
         @RequestParam("activated") boolean activated) {
-        
+
         TacticTypeEnum tacticType = TacticTypeEnum.of(tacticTypeCode);
         try {
             int cntSetActivated = tacticService.setActivated(tacticId, tacticType, activated);

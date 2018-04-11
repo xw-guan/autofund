@@ -89,7 +89,7 @@ public interface StockService {
     int countStock();
 
     /**
-     * 获取数据库中已存在的stock, 从网络批量更新股票数据至最近一个交易日, 若无stock数据则初始化默认指数.
+     * 获取数据库中已存在的stock, 从网络批量更新股票数据至最近一个交易日, 若无stock数据则调用updateStock()方法更新stock表.
      * 
      * @param useMultiThread 是否使用多线程更新, 开启多线程更新能提高效率, 但CPU和内存使用会急剧增加
      * @return 封装更新状态的StockUpdateState对象列表

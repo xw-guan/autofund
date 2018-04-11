@@ -14,4 +14,8 @@ public class IocUtils {
     public static Object getBean(String beanName) {
         return context.getBean(beanName);
     }
-}
+    
+    public static <T> T getBean(Class<T> beanClass, String beanName) {
+        return context.getBean(beanClass, beanName);
+    }
+} 

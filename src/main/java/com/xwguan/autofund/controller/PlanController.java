@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.xwguan.autofund.dto.account.LatestAccountDto;
 import com.xwguan.autofund.dto.common.Result;
+import com.xwguan.autofund.dto.plan.LatestPlanDto;
 import com.xwguan.autofund.dto.plan.LatestPositionDto;
 import com.xwguan.autofund.dto.plan.PlanDto;
 import com.xwguan.autofund.dto.plan.PlanInfoDto;
@@ -33,7 +34,9 @@ import com.xwguan.autofund.enums.HistoryScopeEnum;
 import com.xwguan.autofund.exception.FailGettingRealTimeDataException;
 import com.xwguan.autofund.exception.NotTradeDayException;
 import com.xwguan.autofund.exception.account.DeleteAccountException;
+import com.xwguan.autofund.exception.io.InvalidFundCodeException;
 import com.xwguan.autofund.exception.io.InvalidParamException;
+import com.xwguan.autofund.exception.io.InvalidTickerSymbolException;
 import com.xwguan.autofund.exception.plan.BackTestServiceException;
 import com.xwguan.autofund.exception.plan.UnknownTemplateCodeException;
 import com.xwguan.autofund.service.api.AccountService;
@@ -54,28 +57,28 @@ public class PlanController {
 
     @Autowired
     private PlanService planService;
-    
+
     @Autowired
     private PositionService positionService;
-    
+
     @Autowired
     private TacticService tacticService;
-    
+
     @Autowired
     private AccountService accountService;
-    
+
     @Autowired
     private BackTestService backTestService;
-    
+
     @Autowired
     private PlanMapper planMapper;
-    
+
     @Autowired
     private PositionMapper positionMapper;
-    
+
     @Autowired
     private TacticsMapper tacticsMapper;
-    
+
     @Autowired
     private AccountMapper accountMapper;
 
@@ -261,7 +264,31 @@ public class PlanController {
         }
     }
 
-    
+    /**
+     * 获取计划, 包含策略, 持仓和最新的账户历史
+     * <code>
+     * /plan/12
+     * </code>
+     * 
+     * @param planId
+     * @return
+     */
+    @RequestMapping(value = "/{planId}/latest", method = RequestMethod.GET)
+    @ResponseBody
+    public Result<LatestPlanDto> getLatestPlan(@PathVariable("planId") Long planId) {
+        try {
+            Plan plan = planService.getFullPlanByPlanId(planId, HistoryScopeEnum.LATEST);
+            if (plan == null) {
+                return new Result<>(false, "id为" + planId + "的计划不存在");
+            }
+            LatestPlanDto latestPlanDto = planMapper.toLatestPlanDto(plan);
+            return new Result<>(true, latestPlanDto);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return new Result<>(false, "获取计划失败");
+        }
+    }
+
     /**
      * 获取属于计划的持仓, 带有最新账户历史
      * <code>
@@ -408,6 +435,36 @@ public class PlanController {
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             return new Result<>(false, "删除计划失败, 请重试");
+        }
+    }
+
+    /**
+     * url like
+     * <code>
+     * /{planId}/position
+     * </code>
+     * 
+     * @param fundCode 基金代码, eg. 000001
+     * @param refIndexSymbol 参考指数代码, eg. 000001.SH
+     * @return
+     */
+    @RequestMapping(value = "/{planId}/position", method = RequestMethod.PUT)
+    @ResponseBody
+    public Result<String> insertPosition(@PathVariable("planId") Long planId, String fundCode, String refIndexSymbol) {
+        try {
+            Position position = positionService.getPositionTemplate(fundCode, refIndexSymbol);
+            position.setPlanId(planId);
+            int cntIns = positionService.insertPosition(position);
+            return cntIns > 0
+                ? new Result<>(true, "成功插入")
+                : new Result<>(false, "插入失败, 已存在基金代码为" + "" + "的持仓");
+        } catch (InvalidFundCodeException e) {
+            return new Result<>(false, "无效的基金代码");
+        } catch (InvalidTickerSymbolException e) {
+            return new Result<>(false, "无效的指数代码");
+        } catch (Exception e) {
+            logger.error(e.toString() + ", " + e.getMessage());
+            return new Result<>(false, "插入失败");
         }
     }
 

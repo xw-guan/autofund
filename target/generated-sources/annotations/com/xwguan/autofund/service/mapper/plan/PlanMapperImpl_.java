@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2018-04-11T02:55:36+0800",
+    date = "2018-04-11T23:39:44+0800",
     comments = "version: 1.2.0.Final, compiler: Eclipse JDT (IDE) 3.13.0.v20170516-1929, environment: Java 1.8.0_151 (Oracle Corporation)"
 )
 @Component
@@ -55,11 +55,11 @@ public class PlanMapperImpl_ implements PlanMapper {
 
         PlanInfoDto planInfoDto = new PlanInfoDto();
 
-        planInfoDto.setId( plan.getId() );
-        planInfoDto.setUserId( plan.getUserId() );
-        planInfoDto.setName( plan.getName() );
-        planInfoDto.setExecutionMode( plan.getExecutionMode() );
         planInfoDto.setActivated( plan.getActivated() );
+        planInfoDto.setExecutionMode( plan.getExecutionMode() );
+        planInfoDto.setId( plan.getId() );
+        planInfoDto.setName( plan.getName() );
+        planInfoDto.setUserId( plan.getUserId() );
 
         return planInfoDto;
     }
@@ -72,11 +72,11 @@ public class PlanMapperImpl_ implements PlanMapper {
 
         Plan plan = new Plan();
 
-        plan.setId( planInfoDto.getId() );
-        plan.setUserId( planInfoDto.getUserId() );
-        plan.setName( planInfoDto.getName() );
-        plan.setExecutionMode( planInfoDto.getExecutionMode() );
         plan.setActivated( planInfoDto.getActivated() );
+        plan.setExecutionMode( planInfoDto.getExecutionMode() );
+        plan.setId( planInfoDto.getId() );
+        plan.setName( planInfoDto.getName() );
+        plan.setUserId( planInfoDto.getUserId() );
 
         return plan;
     }
@@ -87,11 +87,11 @@ public class PlanMapperImpl_ implements PlanMapper {
             return;
         }
 
-        plan.setId( planInfoDto.getId() );
-        plan.setUserId( planInfoDto.getUserId() );
-        plan.setName( planInfoDto.getName() );
-        plan.setExecutionMode( planInfoDto.getExecutionMode() );
         plan.setActivated( planInfoDto.getActivated() );
+        plan.setExecutionMode( planInfoDto.getExecutionMode() );
+        plan.setId( planInfoDto.getId() );
+        plan.setName( planInfoDto.getName() );
+        plan.setUserId( planInfoDto.getUserId() );
     }
 
     @Override

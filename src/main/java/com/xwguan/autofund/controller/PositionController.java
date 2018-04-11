@@ -37,14 +37,14 @@ public class PositionController {
     /**
      * url like
      * <code>
-     * /position/template?fund=000001&index=000001%2ESH
+     * /position/templateResult?fund=000001&index=000001%2ESH
      * </code>
      * 
      * @param fundCode 基金代码, eg. 000001
      * @param refIndexSymbol 参考指数代码, eg. 000001.SH
      * @return
      */
-    @RequestMapping(value = "/template", method = RequestMethod.GET)
+    @RequestMapping(value = "/templateResult", method = RequestMethod.GET)
     @ResponseBody
     public Result<PositionDto> getPositionTemplate(@RequestParam("fund") String fundCode,
         @RequestParam("index") String refIndexSymbol) {
@@ -116,5 +116,5 @@ public class PositionController {
             return new Result<>(false, "插入失败");
         }
     }
-
+    
 }

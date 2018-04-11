@@ -1,10 +1,14 @@
 package com.xwguan.autofund.service.mapper.tactic;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.mapstruct.Mapper;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xwguan.autofund.dto.plan.tactic.FlatTacticsDto;
 import com.xwguan.autofund.dto.plan.tactic.GainLossTacticDto;
 import com.xwguan.autofund.dto.plan.tactic.IndexChangeTacticDto;
@@ -23,11 +27,49 @@ import com.xwguan.autofund.entity.plan.tactic.PositionTactic;
 import com.xwguan.autofund.entity.plan.tactic.ProfitTakingTactic;
 import com.xwguan.autofund.entity.plan.tactic.Tactic;
 import com.xwguan.autofund.enums.TacticTypeEnum;
+import com.xwguan.autofund.exception.plan.TacticTypeException;
 import com.xwguan.autofund.util.IocUtils;
 
 @Mapper
 public interface TacticsMapper {
+    
+    default Tactic toTactic(String tacticDtoJson, TacticTypeEnum tacticType)
+        throws JsonParseException, JsonMappingException, IOException, TacticTypeException {
+        ObjectMapper jsonMapper = IocUtils.getBean(ObjectMapper.class, "jsonMapper");
+        if (tacticType == TacticTypeEnum.GAIN_LOSS_TACTIC) {
+            GainLossTacticDto dto = jsonMapper.readValue(tacticDtoJson, GainLossTacticDto.class);
+            GainLossTacticMapper mapper = IocUtils.getBean(GainLossTacticMapper.class);
+            return mapper.toTactic(dto);
+        }
+        if (tacticType == TacticTypeEnum.INDEX_CHANGE_TACTIC) {
+            IndexChangeTacticDto dto = jsonMapper.readValue(tacticDtoJson, IndexChangeTacticDto.class);
+            IndexChangeTacticMapper mapper = IocUtils.getBean(IndexChangeTacticMapper.class);
+            return mapper.toTactic(dto);
+        }
+        if (tacticType == TacticTypeEnum.MA_TACTIC) {
+            MATacticDto dto = jsonMapper.readValue(tacticDtoJson, MATacticDto.class);
+            MATacticMapper mapper = IocUtils.getBean(MATacticMapper.class);
+            return mapper.toTactic(dto);
+        }
+        if (tacticType == TacticTypeEnum.NAV_CHANGE_TACTIC) {
+            NavChangeTacticDto dto = jsonMapper.readValue(tacticDtoJson, NavChangeTacticDto.class);
+            NavChangeTacticMapper mapper = IocUtils.getBean(NavChangeTacticMapper.class);
+            return mapper.toTactic(dto);
+        }
+        if (tacticType == TacticTypeEnum.PERIOD_BUY_TACTIC) {
+            PeriodBuyTacticDto dto = jsonMapper.readValue(tacticDtoJson, PeriodBuyTacticDto.class);
+            PeriodBuyTacticMapper mapper = IocUtils.getBean(PeriodBuyTacticMapper.class);
+            return mapper.toTactic(dto);
+        }
+        if (tacticType == TacticTypeEnum.PROFIT_TAKING_TACTIC) {
+            ProfitTakingTacticDto dto = jsonMapper.readValue(tacticDtoJson, ProfitTakingTacticDto.class);
+            ProfitTakingTacticMapper mapper = IocUtils.getBean(ProfitTakingTacticMapper.class);
+            return mapper.toTactic(dto);
+        }
+        throw new TacticTypeException("Unsupported tactic type:" + tacticType);
+    }
 
+    
     default TacticDto toTacticDto(Tactic tactic) {
         if (tactic == null) {
             return null;
