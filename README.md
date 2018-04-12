@@ -13,7 +13,7 @@ Autofund is a tool for automatic investment plan (AIP), providing customizable t
 - Tomcat 9.0
 - Maven 3.5
 
-由于大量使用了LocalDate, lamda, JDK 1.8是必须的. 其他版本的MySQL, Tomcat和Maven不确定能否正常工作.
+由于大量使用了LocalDate, Lambda表达式, JDK 1.8是必须的. 其他版本的MySQL, Tomcat和Maven不确定能否正常工作.
 
 ## 使用autofund
 ### WEB API
@@ -174,3 +174,8 @@ public class Result<T> {
 ##### 用户管理
     /autofund/admin/user
 (尚未实现)
+
+## 未来工作
+1. 补全前端用户页面
+1. 提升股票和基金数据更新效率
+1. 插件化的策略
